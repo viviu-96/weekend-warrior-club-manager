@@ -41,6 +41,31 @@ Một lệnh chạy cả giao diện lẫn API trên cùng một cổng. Biến 
 
 > Ứng dụng không có đăng nhập. Chỉ đặt `HOST=0.0.0.0` trong mạng bạn tin tưởng.
 
+## Bản web tĩnh trên GitHub Pages (nhánh `static-web`)
+
+Trang: https://viviu-96.github.io/weekend-warrior-club-manager/
+
+GitHub Pages không chạy được server, nên bản này lưu dữ liệu trong **localStorage của trình duyệt** thay
+cho `data/*.json`. Dữ liệu nằm riêng trên từng trình duyệt; dùng Cài đặt → Export / Import để sao lưu
+hoặc chuyển sang máy khác.
+
+| Nhánh | Dùng để |
+| --- | --- |
+| `dev` | Phát triển và chạy local với server + file JSON |
+| `static-web` | Như `dev`, thêm chế độ localStorage và script đăng lên GitHub Pages |
+| `gh-pages` | Chỉ chứa bản build, do `npm run deploy` tạo ra. Không sửa tay. |
+
+```bash
+git switch static-web
+git merge dev            # lấy thay đổi mới từ dev (nếu có)
+npm run dev:static       # chạy thử bản tĩnh tại http://localhost:5173/weekend-warrior-club-manager/
+npm run deploy           # build + đăng lên nhánh gh-pages; trang cập nhật sau khoảng 1 phút
+git push                 # lưu mã nguồn của nhánh static-web
+```
+
+Chế độ tĩnh được bật bằng `vite --mode static`, đọc `.env.static` (`VITE_STORAGE=local`). Nếu đổi tên
+repository, sửa `PAGES_BASE` trong `vite.config.ts`.
+
 ## Cấu trúc project
 
 ```

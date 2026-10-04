@@ -6,7 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server/index.ts",
+    "dev:static": "vite --mode static",
     "build": "tsc --noEmit && vite build",
+    "build:static": "tsc --noEmit && vite build --mode static",
+    "preview:static": "vite preview --mode static",
+    "deploy": "node scripts/deploy-pages.mjs",
     "start": "tsx server/index.ts --prod",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

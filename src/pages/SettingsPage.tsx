@@ -3,6 +3,7 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Button, Card, Field, Modal, PageHeader, Select, TextInput, Toggle } from '../components/ui';
 import { useAppData } from '../hooks/useAppData';
 import { useFeedback } from '../hooks/useFeedback';
+import { IS_LOCAL_STORAGE } from '../services/api';
 import { exportAllJSON } from '../services/exportService';
 import { countLevelUsage, removeLevelWithMigration } from '../services/memberService';
 import { sortLevels } from '../services/pairingService';
@@ -253,10 +254,17 @@ function BackupSettings() {
 
   return (
     <Card title="Sao lưu & khôi phục" collapsible storageKey="settings.backup">
-      <p className="mb-3 text-sm text-slate-600">
-        Dữ liệu được lưu thành file JSON trong thư mục <code className="rounded bg-slate-100 px-1">data/</code> của ứng dụng (members.json, sessions.json,
-        settings.json). Bạn có thể sao lưu bằng cách copy thư mục đó, hoặc dùng hai nút dưới đây.
-      </p>
+      {IS_LOCAL_STORAGE ? (
+        <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          ⚠ Bản web này lưu dữ liệu <strong>ngay trong trình duyệt bạn đang dùng</strong>. Máy khác hoặc trình duyệt khác sẽ không thấy dữ liệu này, và xoá
+          dữ liệu trình duyệt là mất. Hãy Export thường xuyên để sao lưu, và dùng Import để chuyển dữ liệu sang máy khác.
+        </p>
+      ) : (
+        <p className="mb-3 text-sm text-slate-600">
+          Dữ liệu được lưu thành file JSON trong thư mục <code className="rounded bg-slate-100 px-1">data/</code> của ứng dụng (members.json, sessions.json,
+          settings.json). Bạn có thể sao lưu bằng cách copy thư mục đó, hoặc dùng hai nút dưới đây.
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         <Button variant="primary" icon={<Download size={16} aria-hidden="true" />} onClick={exportAll}>
           Export toàn bộ dữ liệu

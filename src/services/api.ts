@@ -1,17 +1,14 @@
 import type { AppData, Member, Session, Settings } from '../types';
+import { ApiError, DATA_READ_ERROR } from './apiError';
+import { localApi } from './localApi';
 
-export const DATA_READ_ERROR = 'Không thể đọc dữ liệu. Vui lòng kiểm tra file dữ liệu.';
+export { ApiError, DATA_READ_ERROR };
 
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public code?: string,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
+/**
+ * true ở bản web tĩnh (GitHub Pages): không có server, dữ liệu lưu trong localStorage của trình duyệt.
+ * Bật bằng VITE_STORAGE=local (xem .env.static).
+ */
+export const IS_LOCAL_STORAGE = import.meta.env.VITE_STORAGE === 'local';
 
 interface RequestOptions {
   method?: string;
@@ -52,7 +49,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return payload as T;
 }
 
-export const api = {
+const httpApi = {
   getAll: () => request<unknown>('/data'),
   replaceAll: (data: AppData) => request<AppData>('/data', { method: 'PUT', body: data }),
 
@@ -72,3 +69,7 @@ export const api = {
   getSettings: () => request<Settings>('/settings'),
   updateSettings: (settings: Settings) => request<Settings>('/settings', { method: 'PUT', body: settings }),
 };
+
+export type Api = typeof httpApi;
+
+export const api: Api = IS_LOCAL_STORAGE ? localApi : httpApi;

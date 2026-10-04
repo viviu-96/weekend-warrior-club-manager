@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Button } from './components/ui';
 import { useAppData } from './hooks/useAppData';
+import { IS_LOCAL_STORAGE } from './services/api';
+import { resetLocalData } from './services/localApi';
 import { DashboardPage } from './pages/DashboardPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { MembersPage } from './pages/MembersPage';
@@ -22,15 +24,34 @@ function LoadErrorScreen() {
           ))}
         </ul>
       )}
-      <p className="mt-3 text-sm text-slate-600">
-        Dữ liệu nằm trong thư mục <code className="rounded bg-slate-100 px-1">data/</code> (members.json, sessions.json,
-        settings.json). Mỗi file có bản sao lưu gần nhất với đuôi <code className="rounded bg-slate-100 px-1">.bak</code>{' '}
-        – bạn có thể dùng nó để khôi phục. Ứng dụng không tự ghi đè lên file đang lỗi.
-      </p>
-      <div className="mt-4">
+      {IS_LOCAL_STORAGE ? (
+        <p className="mt-3 text-sm text-slate-600">
+          Dữ liệu được lưu trong trình duyệt này. Nếu có file backup, hãy bấm “Xoá dữ liệu và nạp lại dữ liệu mẫu” rồi vào Cài đặt → Import dữ liệu để
+          khôi phục.
+        </p>
+      ) : (
+        <p className="mt-3 text-sm text-slate-600">
+          Dữ liệu nằm trong thư mục <code className="rounded bg-slate-100 px-1">data/</code> (members.json, sessions.json,
+          settings.json). Mỗi file có bản sao lưu gần nhất với đuôi <code className="rounded bg-slate-100 px-1">.bak</code>{' '}
+          – bạn có thể dùng nó để khôi phục. Ứng dụng không tự ghi đè lên file đang lỗi.
+        </p>
+      )}
+      <div className="mt-4 flex flex-wrap gap-2">
         <Button variant="primary" onClick={reload}>
           Thử tải lại
         </Button>
+        {IS_LOCAL_STORAGE && (
+          <Button
+            variant="danger"
+            onClick={() => {
+              if (!window.confirm('Xoá toàn bộ dữ liệu đang lưu trong trình duyệt này và nạp lại dữ liệu mẫu?')) return;
+              resetLocalData();
+              reload();
+            }}
+          >
+            Xoá dữ liệu và nạp lại dữ liệu mẫu
+          </Button>
+        )}
       </div>
     </div>
   );

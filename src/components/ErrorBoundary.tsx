@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
           </button>
           <button
             type="button"
-            onClick={() => window.location.assign('/')}
+            onClick={() => window.location.assign(import.meta.env.BASE_URL)}
             className="rounded-lg bg-emerald-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-emerald-800"
           >
             Về trang Tổng quan

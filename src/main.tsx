@@ -13,7 +13,7 @@ if (!root) throw new Error('Không tìm thấy phần tử #root.');
 createRoot(root).render(
   <StrictMode>
     <ErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <FeedbackProvider>
           <AppDataProvider>
             <App />
