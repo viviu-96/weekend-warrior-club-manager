@@ -304,6 +304,17 @@ export function applyPaidToRow(session: Session, settings: PaymentSettings, row:
   });
 }
 
+/** Đánh dấu mọi người đã đóng đủ: "Đã thu" = số còn phải đóng sau khi trừ tiền ứng. Người đã đóng dư được giữ nguyên. */
+export function markAllPaid(session: Session, settings: PaymentSettings): PaymentEntry[] {
+  const byId = new Map(calculateSessionPlayerPayments(session, settings).map((p) => [p.playerId, p]));
+  return session.players.map((player) => {
+    const entry = getPaymentEntry(session, player.id);
+    const payment = byId.get(player.id);
+    const due = payment ? Math.max(payment.roundedPayable - payment.advancePayment, 0) : 0;
+    return { ...entry, paidAmount: Math.max(entry.paidAmount, due) };
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Đối soát
 // ---------------------------------------------------------------------------

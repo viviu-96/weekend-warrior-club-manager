@@ -20,7 +20,7 @@ function Labelled({ label, children, className }: { label: string; children: Rea
   );
 }
 
-const GRID = 'lg:grid-cols-[minmax(7rem,1.1fr)_9rem_4rem_4rem_7rem_7rem_minmax(7rem,1fr)_minmax(5rem,1fr)]';
+const GRID = 'lg:grid-cols-[minmax(8.5rem,1.2fr)_8.5rem_3.5rem_3.5rem_6.5rem_6.5rem_minmax(8.5rem,1fr)_minmax(4rem,0.8fr)]';
 
 /** Thiết lập tính tiền cho từng người: tham gia, tính sân/cầu, đã ứng, góp cầu, người giới thiệu. */
 export function PaymentConfigList({ session, disabled, onChange }: Props) {
