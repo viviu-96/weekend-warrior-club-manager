@@ -4,6 +4,7 @@ import { Avatar, cx, Select } from '../../components/ui';
 import { useAppData } from '../../hooks/useAppData';
 import { calculateMemberStats, sortMembersByStats, type StatsSortKey } from '../../services/statsService';
 import type { Member } from '../../types';
+import { WinLossChart } from './WinLossChart';
 import { formatDate, formatVND } from '../../utils/format';
 
 /** Thống kê theo thành viên: số buổi, số trận, partner hay ghép, tiền đã đóng, còn nợ. */
@@ -45,6 +46,10 @@ export function MemberStatsTable({ members }: { members: Member[] }) {
 
   return (
     <div>
+      <div className="mb-4">
+        <WinLossChart members={members} stats={stats} />
+      </div>
+
       {/* Mobile: mỗi thành viên một thẻ */}
       <div className="md:hidden">
         <label className="mb-3 flex items-center gap-2 text-sm text-slate-700">

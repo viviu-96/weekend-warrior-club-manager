@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Match, Member } from '../../types';
 import { generateZaloPairingText } from '../exportService';
 import { getMatchWinner, hasScores, setMatchScore } from '../pairingService';
-import { calculateMemberStats, sortMembersByStats } from '../statsService';
+import { buildWinLossChart, calculateMemberStats, sortMembersByStats } from '../statsService';
 import { parseAppData } from '../validationService';
 import { LEVELS, makePlayer, makeSession, patchPayment, SETTINGS } from './testHelpers';
 
@@ -74,6 +74,34 @@ describe('thống kê thắng / thua', () => {
     expect(stats.get('member_Em')).toMatchObject({ matchesScored: 0, winRate: null });
     expect(sortMembersByStats(members, stats, 'winRate', 'desc').map((m) => m.name)).toEqual(['Bình', 'An', 'Dũng', 'Chi', 'Em']);
     expect(sortMembersByStats(members, stats, 'wins', 'desc')[0]!.name).toBe('Bình');
+  });
+});
+
+describe('dữ liệu biểu đồ thắng / thua', () => {
+  const members: Member[] = ['An', 'Bình', 'Chi', 'Dũng', 'Em'].map((name) => ({ id: `member_${name}`, name, gender: 'male', level: 'TB', note: '' }));
+  const players = members.slice(0, 4).map((m) => makePlayer(m.name, 'TB'));
+  const session = makeSession(players, {
+    pairings: [
+      match('m1', ['An', 'Bình'], ['Chi', 'Dũng'], 21, 15, 1),
+      match('m2', ['An', 'Chi'], ['Bình', 'Dũng'], 19, 21, 2),
+      match('m3', ['An', 'Dũng'], ['Bình', 'Chi'], 20, 20, 3),
+    ],
+  });
+  const chart = buildWinLossChart(members, calculateMemberStats(members, [session], SETTINGS));
+
+  it('chỉ gồm người đã có trận được ghi tỉ số, xếp theo tỉ lệ thắng', () => {
+    expect(chart.rows.map((row) => [row.member.name, row.wins, row.losses, row.draws, row.winRate])).toEqual([
+      ['Bình', 2, 0, 1, 67],
+      ['An', 1, 1, 1, 33],
+      ['Dũng', 1, 1, 1, 33],
+      ['Chi', 0, 2, 1, 0],
+    ]);
+  });
+
+  it('thang đo chung lấy nửa dài nhất, hoà chia đôi cho hai bên', () => {
+    // Bình: 2 thắng + nửa trận hoà; Chi: 2 thua + nửa trận hoà.
+    expect(chart.max).toBe(2.5);
+    expect(buildWinLossChart(members, calculateMemberStats(members, [], SETTINGS))).toEqual({ rows: [], max: 0 });
   });
 });
 
