@@ -145,3 +145,31 @@ export function sortMembersByStats(
     return sign * (value(a) - value(b)) || byName(a, b);
   });
 }
+
+export interface WinLossRow {
+  member: Member;
+  wins: number;
+  losses: number;
+  draws: number;
+  matchesScored: number;
+  winRate: number;
+}
+
+export interface WinLossChart {
+  rows: WinLossRow[];
+  /** Độ dài lớn nhất của một nửa biểu đồ (thắng, hoặc thua, cộng nửa số trận hoà) – dùng làm thang đo chung. */
+  max: number;
+}
+
+/** Dữ liệu biểu đồ thắng / thua: chỉ gồm người đã có trận được ghi tỉ số, xếp theo tỉ lệ thắng. */
+export function buildWinLossChart(members: Member[], stats: Map<string, MemberStats>): WinLossChart {
+  const rows = members
+    .flatMap<WinLossRow>((member) => {
+      const item = stats.get(member.id);
+      if (!item || item.matchesScored === 0 || item.winRate === null) return [];
+      return [{ member, wins: item.wins, losses: item.losses, draws: item.draws, matchesScored: item.matchesScored, winRate: item.winRate }];
+    })
+    .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins || a.losses - b.losses || a.member.name.localeCompare(b.member.name, 'vi'));
+  const max = rows.reduce((value, row) => Math.max(value, row.wins + row.draws / 2, row.losses + row.draws / 2), 0);
+  return { rows, max };
+}

@@ -217,6 +217,9 @@ còn nợ, số trận thắng – thua và tỉ lệ thắng. Tiền gồm cả
 - Tỉ số nhập được cả khi kết quả xếp cặp đã khoá, vì thường nhập sau khi đánh xong.
 - Xếp lại một lượt đã có tỉ số sẽ xoá tỉ số của lượt đó (ứng dụng hỏi lại trước).
 - Thắng – thua và tỉ lệ thắng ở trang Thành viên chỉ tính các trận đã ghi tỉ số.
+- Trang Thành viên → Thống kê có **biểu đồ thắng / thua**: mỗi thành viên một thanh, thua mọc sang trái (đỏ),
+  thắng mọc sang phải (xanh dương), hoà màu xám ở giữa; xếp theo tỉ lệ thắng. Rê chuột hoặc chạm vào một dòng
+  để xem số liệu chi tiết.
 
 ## Thuật toán xếp cặp
 
@@ -274,7 +277,7 @@ Sân: 28.000/người. Cầu: 9 người chịu → suất chuẩn 21.000, nửa
 
 ## Kiểm thử
 
-`npm test` chạy 110 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
+`npm test` chạy 112 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
 giới tính, vãng lai, xếp lại, lịch sử partner, chia sân, làm tròn, tiền sân/cầu, không chơi, nửa buổi,
 ứng trước, đóng góp cầu, gộp 1 và 2 khách, không gộp, còn thiếu, đóng dư, đối soát, nhân bản buổi,
 validation, import lỗi, nội dung Zalo, CSV, JSON, nhiều lượt đấu và xoay vòng người chờ, bảng thu gộp,
