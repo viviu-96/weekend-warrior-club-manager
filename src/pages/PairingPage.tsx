@@ -19,8 +19,10 @@ import {
   getRoundMatches,
   getRounds,
   getWaitCounts,
+  hasScores,
   reassignCourts,
   removeRound,
+  setMatchScore,
   setRoundMatches,
   swapPlayers,
 } from '../services/pairingService';
@@ -82,10 +84,20 @@ export function PairingPage() {
   };
 
   /** Xếp (hoặc xếp lại) một lượt. Các lượt khác được giữ nguyên và dùng để xoay vòng người chờ, tránh lặp partner. */
-  const generate = (targetRound: number, reroll: boolean) => {
+  const generate = async (targetRound: number, reroll: boolean) => {
     if (errors.length > 0) {
       toast(errors[0]!.message, 'error');
       return;
+    }
+    // Xếp lại sẽ tạo trận mới nên tỉ số đã ghi của lượt này bị mất – hỏi lại trước khi làm.
+    if (reroll && hasScores(getRoundMatches(session.pairings, targetRound))) {
+      const ok = await confirm({
+        title: `Xếp lại lượt ${targetRound}`,
+        message: 'Lượt này đã có tỉ số. Xếp lại sẽ xoá các tỉ số đã ghi của lượt.',
+        confirmLabel: 'Xếp lại và xoá tỉ số',
+        danger: true,
+      });
+      if (!ok) return;
     }
     const seenKey = `${session.id}#${targetRound}`;
     const current = getRoundMatches(session.pairings, targetRound);
@@ -131,6 +143,9 @@ export function PairingPage() {
     if (selectedId !== playerId) change({ ...session, pairings: swapPlayers(session.pairings, selectedId, playerId, round) });
     setSelectedId(null);
   };
+
+  const setScore = (matchId: string, scoreA: number | null, scoreB: number | null) =>
+    change({ ...session, pairings: setMatchScore(session.pairings, matchId, scoreA, scoreB) });
 
   const lock = () => {
     stopEditing();
@@ -214,7 +229,7 @@ export function PairingPage() {
             <Button
               variant="primary"
               icon={<Shuffle size={16} aria-hidden="true" />}
-              onClick={() => generate(1, false)}
+              onClick={() => void generate(1, false)}
               disabled={locked || errors.length > 0}
               className="px-7 py-3 text-base shadow-md shadow-emerald-900/25"
             >
@@ -246,7 +261,7 @@ export function PairingPage() {
               }
               actions={
                 <div className="flex flex-wrap gap-2 print:hidden">
-                  <Button size="sm" icon={<RefreshCw size={14} aria-hidden="true" />} onClick={() => generate(round, true)} disabled={locked}>
+                  <Button size="sm" icon={<RefreshCw size={14} aria-hidden="true" />} onClick={() => void generate(round, true)} disabled={locked}>
                     Xếp lại{rounds.length > 1 && ` lượt ${round}`}
                   </Button>
                   <Button
@@ -301,7 +316,7 @@ export function PairingPage() {
                 <button
                   type="button"
                   disabled={locked}
-                  onClick={() => generate(lastRound + 1, false)}
+                  onClick={() => void generate(lastRound + 1, false)}
                   title="Xếp thêm một lượt mới: ưu tiên người vừa chờ, tránh lặp lại partner"
                   className="inline-flex items-center gap-1 rounded-full border border-dashed border-emerald-600 px-3.5 py-1.5 text-sm font-medium text-emerald-800 transition hover:bg-emerald-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -326,7 +341,8 @@ export function PairingPage() {
               )}
 
               <div className="print:hidden">
-                <PairingResultView session={session} round={round} levels={levels} showStrength={showStrength} editing={editing && !locked} selectedId={selectedId} onPick={pick} />
+                <PairingResultView session={session} round={round} levels={levels} showStrength={showStrength} editing={editing && !locked} selectedId={selectedId} onPick={pick} onScoreChange={setScore} />
+                <p className="mt-3 text-xs text-slate-500">Nhập tỉ số vào hai ô cạnh chữ VS sau khi đánh xong – dùng cho thống kê thắng/thua ở trang Thành viên. Tỉ số vẫn nhập được khi kết quả đã khoá.</p>
               </div>
 
               {/* Bản in: tất cả các lượt */}

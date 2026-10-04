@@ -534,6 +534,30 @@ export function swapPlayers(matches: Match[], playerA: string, playerB: string, 
 }
 
 // ---------------------------------------------------------------------------
+// Kết quả trận đấu
+// ---------------------------------------------------------------------------
+
+export type MatchWinner = 'A' | 'B' | 'draw';
+
+/** Đội thắng theo tỉ số đã ghi; null khi trận chưa có đủ tỉ số của hai đội. */
+export function getMatchWinner(match: Pick<Match, 'scoreA' | 'scoreB'>): MatchWinner | null {
+  const { scoreA, scoreB } = match;
+  if (scoreA === null || scoreA === undefined || scoreB === null || scoreB === undefined) return null;
+  if (scoreA === scoreB) return 'draw';
+  return scoreA > scoreB ? 'A' : 'B';
+}
+
+/** Ghi tỉ số cho một trận. Giá trị không hợp lệ (âm, không phải số) được coi là để trống. */
+export function setMatchScore(matches: Match[], matchId: string, scoreA: number | null, scoreB: number | null): Match[] {
+  const clean = (value: number | null) => (value === null || !Number.isFinite(value) || value < 0 ? null : Math.min(Math.floor(value), 99));
+  return matches.map((match) => (match.id === matchId ? { ...match, scoreA: clean(scoreA), scoreB: clean(scoreB) } : match));
+}
+
+export function hasScores(matches: Match[]): boolean {
+  return matches.some((match) => (match.scoreA ?? null) !== null || (match.scoreB ?? null) !== null);
+}
+
+// ---------------------------------------------------------------------------
 // Nhiều lượt đấu trong một buổi
 // ---------------------------------------------------------------------------
 

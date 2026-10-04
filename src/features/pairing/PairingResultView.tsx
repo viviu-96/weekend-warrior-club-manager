@@ -1,6 +1,6 @@
-import { CircleCheck, Scale } from 'lucide-react';
+import { CircleCheck, Scale, Trophy } from 'lucide-react';
 import { Avatar, cx } from '../../components/ui';
-import { calculateMatchBalance, getRoundMatches, getRounds, getWaitingPlayers } from '../../services/pairingService';
+import { calculateMatchBalance, getMatchWinner, getRoundMatches, getRounds, getWaitingPlayers } from '../../services/pairingService';
 import type { Level, Match, Session, SessionPlayer, TeamIds } from '../../types';
 import { LevelBadge } from '../members/fields';
 
@@ -14,9 +14,11 @@ interface Props {
   editing?: boolean;
   selectedId?: string | null;
   onPick?: (playerId: string) => void;
+  /** Có thì hiện ô nhập tỉ số; không có thì chỉ hiển thị tỉ số đã ghi. */
+  onScoreChange?: (matchId: string, scoreA: number | null, scoreB: number | null) => void;
 }
 
-export function PairingResultView({ session, round, levels, showStrength, editing = false, selectedId = null, onPick }: Props) {
+export function PairingResultView({ session, round, levels, showStrength, editing = false, selectedId = null, onPick, onScoreChange }: Props) {
   const byId = new Map(session.players.map((player) => [player.id, player]));
   const matches = getRoundMatches(session.pairings, round);
   const waiting = getWaitingPlayers(session.players, session.pairings, round);
@@ -59,8 +61,40 @@ export function PairingResultView({ session, round, levels, showStrength, editin
     );
   };
 
-  const team = (ids: TeamIds, label: string, strength: number | null) => (
-    <div className="flex flex-1 flex-col items-center gap-1.5 rounded-lg bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200" aria-label={label}>
+  const scoreBox = (match: Match, side: 'A' | 'B') => {
+    const value = (side === 'A' ? match.scoreA : match.scoreB) ?? null;
+    if (!onScoreChange) return value === null ? null : <span className="w-7 text-center text-lg font-bold tabular-nums text-slate-900">{value}</span>;
+    return (
+      <input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        max={99}
+        aria-label={`Tỉ số đội ${side} trận ${match.matchNumber}`}
+        placeholder="–"
+        value={value ?? ''}
+        onChange={(event) => {
+          const next = event.target.value === '' ? null : Number(event.target.value);
+          onScoreChange(match.id, side === 'A' ? next : (match.scoreA ?? null), side === 'B' ? next : (match.scoreB ?? null));
+        }}
+        className="h-9 w-12 rounded-lg border border-slate-300 bg-white text-center text-base font-bold tabular-nums text-slate-900 [appearance:textfield] placeholder:font-normal placeholder:text-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 print:border-0 [&::-webkit-inner-spin-button]:appearance-none"
+      />
+    );
+  };
+
+  const team = (ids: TeamIds, label: string, strength: number | null, won: boolean) => (
+    <div
+      className={cx(
+        'relative flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-lg bg-white px-3 py-2.5 shadow-sm ring-1',
+        won ? 'ring-2 ring-emerald-600' : 'ring-slate-200',
+      )}
+      aria-label={won ? `${label} – thắng` : label}
+    >
+      {won && (
+        <span className="absolute -top-2.5 inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+          <Trophy size={11} aria-hidden="true" /> Thắng
+        </span>
+      )}
       <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
         {chip(byId.get(ids[0]), ids[0])}
         {chip(byId.get(ids[1]), ids[1])}
@@ -76,10 +110,14 @@ export function PairingResultView({ session, round, levels, showStrength, editin
   const matchCard = (match: Match) => {
     const [a1, a2, b1, b2] = [...match.teamA, ...match.teamB].map((id) => byId.get(id));
     const balance = a1 && a2 && b1 && b2 ? calculateMatchBalance([a1, a2], [b1, b2], levels) : null;
+    const winner = getMatchWinner(match);
     return (
       <div key={match.id} className="rounded-xl border border-emerald-200/70 bg-emerald-50/60 p-3 transition hover:border-emerald-300 hover:shadow-sm print:break-inside-avoid">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-emerald-900">Trận {match.matchNumber}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-emerald-900">
+            Trận {match.matchNumber}
+            {winner === 'draw' && <span className="ml-2 font-medium normal-case text-slate-600">• Hoà</span>}
+          </p>
           {showStrength &&
             balance &&
             (balance.difference === 0 ? (
@@ -93,11 +131,13 @@ export function PairingResultView({ session, round, levels, showStrength, editin
             ))}
         </div>
         <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-          {team(match.teamA, 'Đội A', balance?.teamAStrength ?? null)}
-          <span className="z-10 -my-3.5 flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full bg-slate-900 text-[11px] font-bold text-white shadow ring-2 ring-white sm:-mx-3.5 sm:my-0">
-            VS
-          </span>
-          {team(match.teamB, 'Đội B', balance?.teamBStrength ?? null)}
+          {team(match.teamA, 'Đội A', balance?.teamAStrength ?? null, winner === 'A')}
+          <div className="flex shrink-0 items-center justify-center gap-1.5 self-center">
+            {scoreBox(match, 'A')}
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white shadow ring-2 ring-white">VS</span>
+            {scoreBox(match, 'B')}
+          </div>
+          {team(match.teamB, 'Đội B', balance?.teamBStrength ?? null, winner === 'B')}
         </div>
       </div>
     );

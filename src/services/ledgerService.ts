@@ -1,12 +1,10 @@
-import type { ClubFund, FundTransaction, FundTransactionType, PaymentEntry, Session, Settings } from '../types';
+import type { PaymentEntry, Session, Settings } from '../types';
 import { formatDate, formatVNDCompact, getDayShort } from '../utils/format';
-import { createId } from '../utils/id';
 import { getPlayerKey } from './pairingService';
 import {
   applyPaidToRow,
   calculateOutstanding,
   calculateSessionPayments,
-  reconcileSession,
   type Outstanding,
   type PaymentRow,
   type PaymentStatus,
@@ -194,91 +192,4 @@ export function generateZaloCombinedText(sessions: Session[], settings: PaymentS
   });
   const dates = columns.map((column) => `${getDayShort(column.date)} ${formatDate(column.date)}`).join(' + ');
   return ['💰 THU TIỀN CẦU LÔNG', `📅 ${dates}`, '', ...lines, '', `Tổng: ${formatVNDCompact(total)}`].join('\n');
-}
-
-// ---------------------------------------------------------------------------
-// Quỹ CLB
-// ---------------------------------------------------------------------------
-
-export type FundEntryKind = 'opening' | 'session_income' | 'session_expense' | 'manual';
-
-export interface FundEntry {
-  id: string;
-  date: string;
-  label: string;
-  /** Dương = thu vào quỹ, âm = chi ra. */
-  amount: number;
-  kind: FundEntryKind;
-  /** Số dư quỹ sau dòng này. */
-  balance: number;
-  /** Có với khoản thu/chi nhập tay – dùng để xoá. */
-  transactionId?: string;
-  sessionId?: string;
-}
-
-export interface FundLedger {
-  entries: FundEntry[];
-  openingBalance: number;
-  totalIncome: number;
-  totalExpense: number;
-  balance: number;
-  /** Tiền các thành viên còn nợ – sẽ vào quỹ khi thu đủ. */
-  receivable: number;
-}
-
-/**
- * Sổ quỹ = số dư đầu + tiền thực thu của các buổi − tiền thực chi của các buổi + các khoản nhập tay.
- * Tiền chi của một buổi = tiền sân + tiền cầu − phần cầu thành viên đóng góp bằng hiện vật.
- */
-export function buildFundLedger(sessions: Session[], settings: Pick<Settings, 'halfPlayCourtMode' | 'fund'>): FundLedger {
-  const pending: Omit<FundEntry, 'balance'>[] = [];
-  let receivable = 0;
-
-  for (const session of sessions) {
-    const r = reconcileSession(session, settings);
-    const date = formatDate(session.date);
-    receivable += r.totalOutstanding;
-    if (r.totalCollected > 0) {
-      pending.push({ id: `${session.id}:in`, date: session.date, label: `Thu tiền buổi ${date}`, amount: r.totalCollected, kind: 'session_income', sessionId: session.id });
-    }
-    const cashCost = r.totalCost - r.totalContribution;
-    if (cashCost > 0) {
-      pending.push({ id: `${session.id}:out`, date: session.date, label: `Chi sân + cầu buổi ${date}`, amount: -cashCost, kind: 'session_expense', sessionId: session.id });
-    }
-  }
-  for (const item of settings.fund.transactions) {
-    pending.push({
-      id: item.id,
-      date: item.date,
-      label: item.note || (item.type === 'income' ? 'Thu khác' : 'Chi khác'),
-      amount: item.type === 'income' ? item.amount : -item.amount,
-      kind: 'manual',
-      transactionId: item.id,
-    });
-  }
-
-  // Cùng ngày: thu trước, chi sau – để số dư trong ngày không âm một cách khó hiểu.
-  pending.sort((a, b) => a.date.localeCompare(b.date) || b.amount - a.amount);
-
-  const openingBalance = settings.fund.openingBalance;
-  let balance = openingBalance;
-  const entries: FundEntry[] = pending.map((entry) => {
-    balance += entry.amount;
-    return { ...entry, balance };
-  });
-  const totalIncome = entries.filter((e) => e.amount > 0).reduce((sum, e) => sum + e.amount, 0);
-  const totalExpense = entries.filter((e) => e.amount < 0).reduce((sum, e) => sum - e.amount, 0);
-  return { entries, openingBalance, totalIncome, totalExpense, balance, receivable };
-}
-
-export function createFundTransaction(input: { date: string; type: FundTransactionType; amount: number; note: string }): FundTransaction {
-  return { id: createId('fund'), date: input.date, type: input.type, amount: Math.round(input.amount), note: input.note.trim() };
-}
-
-export function addFundTransaction(fund: ClubFund, transaction: FundTransaction): ClubFund {
-  return { ...fund, transactions: [...fund.transactions, transaction] };
-}
-
-export function removeFundTransaction(fund: ClubFund, transactionId: string): ClubFund {
-  return { ...fund, transactions: fund.transactions.filter((item) => item.id !== transactionId) };
 }

@@ -8,23 +8,6 @@ export interface Level {
   score: number;
 }
 
-export type FundTransactionType = 'income' | 'expense';
-
-/** Khoản thu / chi ngoài các buổi chơi (mua cầu dự trữ, liên hoan, ủng hộ...). */
-export interface FundTransaction {
-  id: string;
-  date: string;
-  type: FundTransactionType;
-  amount: number;
-  note: string;
-}
-
-export interface ClubFund {
-  /** Số dư quỹ trước khi dùng ứng dụng. */
-  openingBalance: number;
-  transactions: FundTransaction[];
-}
-
 export interface Settings {
   clubName: string;
   levels: Level[];
@@ -33,7 +16,6 @@ export interface Settings {
   defaultCourtCount: number;
   defaultTime: string;
   mergeGuestsByDefault: boolean;
-  fund: ClubFund;
 }
 
 export interface Member {
@@ -70,6 +52,9 @@ export interface Match {
   court: number;
   teamA: TeamIds;
   teamB: TeamIds;
+  /** Tỉ số của đội A / đội B; để trống khi chưa ghi kết quả. */
+  scoreA?: number | null;
+  scoreB?: number | null;
 }
 
 export interface PaymentEntry {
