@@ -58,7 +58,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
       {children}
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-[60] flex flex-col items-center gap-2 px-4 md:bottom-6 print:hidden">
         {toasts.map((item) => (
-          <div key={item.id} className={cx('pointer-events-auto max-w-md rounded-lg px-4 py-2.5 text-sm font-medium shadow-lg', TOAST_TONES[item.tone])}>
+          <div key={item.id} className={cx('animate-rise pointer-events-auto max-w-md rounded-2xl px-4 py-2.5 text-sm font-medium shadow-lg', TOAST_TONES[item.tone])}>
             <span aria-hidden="true">{TOAST_PREFIX[item.tone]} </span>
             {item.message}
           </div>

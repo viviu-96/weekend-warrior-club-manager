@@ -1,4 +1,4 @@
-import { Copy, Plus } from 'lucide-react';
+import { CalendarPlus, Copy, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Button, EmptyState, Select } from '../../components/ui';
 import { useAppData } from '../../hooks/useAppData';
@@ -29,7 +29,7 @@ export function SessionPicker() {
   const latest = sorted[0];
 
   return (
-    <div className="mb-4 flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm print:hidden">
+    <div className="animate-rise mb-4 flex flex-wrap items-end gap-2 rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm shadow-slate-900/5 print:hidden">
       <label className="min-w-0 flex-1 basis-56">
         <span className="mb-1 block text-xs font-medium text-slate-700">Buổi chơi</span>
         <Select value={activeSession?.id ?? ''} onChange={(event) => setActiveSessionId(event.target.value || null)} disabled={sorted.length === 0}>
@@ -58,6 +58,7 @@ export function NoSessionState() {
   const createNew = useCreateSession();
   return (
     <EmptyState
+      icon={<CalendarPlus size={22} aria-hidden="true" />}
       title="Chưa có buổi chơi nào"
       description="Tạo buổi chơi mới để bắt đầu thêm người chơi, xếp cặp và tính tiền."
       action={

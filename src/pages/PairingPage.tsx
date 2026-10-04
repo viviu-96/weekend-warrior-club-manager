@@ -1,7 +1,8 @@
-import { ArrowRight, Copy, Lock, LockOpen, Pencil, Printer, RefreshCw, Shuffle } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { ArrowRight, Lock, LockOpen, Pencil, Printer, RefreshCw, Shuffle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Badge, Button, Card, Field, IssueList, PageHeader, TextInput } from '../components/ui';
+import { CopyButton } from '../components/CopyButton';
+import { Badge, Button, Card, cx, Field, IssueList, PageHeader, TextInput } from '../components/ui';
 import { AddPlayerPanel } from '../features/pairing/AddPlayerPanel';
 import { PairingResultView } from '../features/pairing/PairingResultView';
 import { PlayerList } from '../features/pairing/PlayerList';
@@ -20,7 +21,6 @@ import {
 } from '../services/pairingService';
 import { validateForPairing } from '../services/validationService';
 import type { Session } from '../types';
-import { copyToClipboard } from '../utils/browser';
 import { formatSessionDate, getDayOfWeek, parseISODate } from '../utils/format';
 
 function balanceTone(score: number): 'green' | 'amber' | 'red' {
@@ -36,6 +36,13 @@ export function PairingPage() {
   const [showStrength, setShowStrength] = useState(true);
   // Các phương án đã hiển thị cho từng buổi, để "Xếp lại" không lặp lại.
   const seenSignatures = useRef(new Map<string, string[]>());
+  // Sau khi xếp cặp, cuộn tới kết quả và nháy nhẹ để admin thấy có phương án mới.
+  const resultRef = useRef<HTMLDivElement>(null);
+  const [generation, setGeneration] = useState(0);
+
+  useEffect(() => {
+    if (generation > 0) resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [generation]);
 
   if (!session) {
     return (
@@ -74,6 +81,7 @@ export function PairingPage() {
     setEditing(false);
     setSelectedId(null);
     change({ ...session, pairings: result.matches });
+    setGeneration((value) => value + 1);
     if (result.cycled) toast('Đã xem hết các phương án cân bằng – quay lại từ đầu.', 'info');
     else toast(`Đã xếp ${result.matches.length} trận • Balance Score ${result.balanceScore}/100`);
   };
@@ -94,11 +102,6 @@ export function PairingPage() {
   const unlock = async () => {
     const ok = await confirm({ title: 'Mở khoá kết quả', message: 'Bạn có chắc muốn mở khóa kết quả xếp cặp?', confirmLabel: 'Mở khoá' });
     if (ok) change({ ...session, pairingLocked: false });
-  };
-
-  const copy = async () => {
-    const ok = await copyToClipboard(generateZaloPairingText(session, { levels, showStrength: false }));
-    toast(ok ? 'Đã copy kết quả xếp cặp.' : 'Không copy được, hãy thử lại.', ok ? 'success' : 'error');
   };
 
   return (
@@ -169,7 +172,7 @@ export function PairingPage() {
 
         {!hasResult && (
           <div className="flex flex-wrap items-center gap-3 print:hidden">
-            <Button variant="primary" icon={<Shuffle size={16} aria-hidden="true" />} onClick={() => generate(false)} disabled={locked || errors.length > 0} className="px-6 py-2.5">
+            <Button variant="primary" icon={<Shuffle size={16} aria-hidden="true" />} onClick={() => generate(false)} disabled={locked || errors.length > 0} className="px-7 py-3 text-base shadow-md shadow-emerald-900/25">
               Xếp cặp
             </Button>
             {eligible.length >= 4 && (
@@ -181,11 +184,18 @@ export function PairingPage() {
         )}
 
         {hasResult && (
+          <div ref={resultRef} className="scroll-mt-20">
           <Card
+            key={generation}
             title={
               <span className="flex flex-wrap items-center gap-2">
                 Kết quả xếp cặp
-                <Badge tone={balanceTone(balanceScore)}>Balance Score: {balanceScore}/100</Badge>
+                <Badge tone={balanceTone(balanceScore)}>
+                  <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-10 overflow-hidden rounded-full bg-black/10 align-middle">
+                    <span className={cx('block h-full rounded-full bg-current')} style={{ width: `${balanceScore}%` }} />
+                  </span>
+                  Balance Score: {balanceScore}/100
+                </Badge>
                 {locked && <Badge tone="blue">🔒 Đã khoá</Badge>}
               </span>
             }
@@ -216,9 +226,7 @@ export function PairingPage() {
                     Khoá kết quả
                   </Button>
                 )}
-                <Button size="sm" icon={<Copy size={14} aria-hidden="true" />} onClick={() => void copy()}>
-                  Copy kết quả
-                </Button>
+                <CopyButton label="Copy kết quả" successMessage="Đã copy kết quả xếp cặp." getText={() => generateZaloPairingText(session, { levels, showStrength: false })} />
                 <Button size="sm" icon={<Printer size={14} aria-hidden="true" />} onClick={() => window.print()}>
                   In
                 </Button>
@@ -244,6 +252,7 @@ export function PairingPage() {
               </Link>
             </div>
           </Card>
+          </div>
         )}
       </div>
     </>

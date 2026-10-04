@@ -6,6 +6,7 @@ import {
   calculatePlayerPayment,
   calculateSessionPayments,
   calculateShuttleShare,
+  markAllPaid,
   mergeGuestPayment,
   calculateSessionPlayerPayments,
   reconcileSession,
@@ -236,6 +237,18 @@ describe('các trường hợp tính tiền khác', () => {
     expect(rows).toHaveLength(3);
     session = patchPayment(session, 'c', { referrerPlayerId: 'ghost' });
     expect(calculateSessionPayments(session, SETTINGS).rows.map((r) => r.key)).toEqual(['a', 'c']);
+  });
+
+  it('markAllPaid: mọi người đủ tiền, giữ nguyên người đã đóng dư', () => {
+    const players = ['a', 'b', 'c'].map((id) => makePlayer(id, 'TB'));
+    let session = makeSession(players, { courtCost: 90000, shuttleCost: 0 });
+    session = patchPayment(session, 'a', { advancePayment: 10000 });
+    session = patchPayment(session, 'b', { paidAmount: 50000 });
+    const payments = markAllPaid(session, SETTINGS);
+    expect(payments.map((p) => p.paidAmount)).toEqual([20000, 50000, 30000]);
+    const r = reconcileSession({ ...session, payments }, SETTINGS);
+    expect(r.totalOutstanding).toBe(0);
+    expect(r.totalOverpaid).toBe(20000);
   });
 
   it('applyPaidToRow phân bổ tiền đã thu cho cả nhóm gộp', () => {

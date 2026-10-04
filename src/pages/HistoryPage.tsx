@@ -1,14 +1,14 @@
 import { ChevronRight, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Badge, Button, PageHeader } from '../components/ui';
+import { Badge, Button, PageHeader, percentOf, ProgressBar } from '../components/ui';
 import { DuplicateSessionModal } from '../features/sessions/DuplicateSessionModal';
 import { NoSessionState, useCreateSession } from '../features/sessions/SessionPicker';
 import { useAppData } from '../hooks/useAppData';
 import { reconcileSession } from '../services/paymentService';
 import { sortSessionsByDate } from '../services/sessionService';
 import type { Session } from '../types';
-import { formatDate, formatVND, getDayOfWeek } from '../utils/format';
+import { formatDate, formatVND, getDayOfWeek, getDayShort } from '../utils/format';
 
 export function HistoryPage() {
   const { sessions, settings } = useAppData();
@@ -45,10 +45,15 @@ export function HistoryPage() {
               // Cả thẻ bấm được: link tiêu đề phủ toàn bộ thẻ, nút Nhân bản nổi lên trên.
               <li
                 key={session.id}
-                className="relative rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-500 hover:shadow-md focus-within:border-emerald-600"
+                className="animate-rise relative rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-500 hover:shadow-md focus-within:border-emerald-600"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="flex items-center gap-3">
+                    <span aria-hidden="true" className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white shadow-sm">
+                      <span className="text-[10px] font-semibold uppercase leading-none text-emerald-100">{getDayShort(session.date)}</span>
+                      <span className="text-lg font-bold leading-tight">{session.date.slice(8, 10)}</span>
+                    </span>
+                    <div>
                     <Link
                       to={`/lich-su/${encodeURIComponent(session.id)}`}
                       aria-label={`Xem chi tiết buổi ${formatDate(session.date)}`}
@@ -59,6 +64,7 @@ export function HistoryPage() {
                     <p className="text-sm text-slate-600">
                       {getDayOfWeek(session.date)} • {session.time}
                     </p>
+                    </div>
                   </div>
                   <div className="flex flex-wrap justify-end gap-1">
                     {session.pairingLocked && <Badge tone="blue">🔒 Xếp cặp</Badge>}
@@ -79,6 +85,14 @@ export function HistoryPage() {
                     <dd className="font-semibold tabular-nums">{formatVND(r.totalCost)}</dd>
                   </div>
                 </dl>
+                {r.totalPayable > 0 && (
+                  <div className="mt-3">
+                    <ProgressBar label="Tiến độ thu tiền" value={r.totalCollected} max={r.totalPayable} />
+                    <p className="mt-1 text-xs text-slate-600">
+                      Đã thu {formatVND(r.totalCollected)} / {formatVND(r.totalPayable)} ({percentOf(r.totalCollected, r.totalPayable)}%)
+                    </p>
+                  </div>
+                )}
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
                   <Button size="sm" className="relative z-10" icon={<Copy size={14} aria-hidden="true" />} onClick={() => setDuplicating(session)}>
                     Nhân bản

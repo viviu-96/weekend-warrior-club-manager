@@ -1,5 +1,6 @@
-import { Copy, FileJson, FileSpreadsheet, Lock, LockOpen, Printer } from 'lucide-react';
-import { Badge, Button, Card, Field, IssueList, MoneyInput, PageHeader, Toggle } from '../components/ui';
+import { CheckCheck, FileJson, FileSpreadsheet, Lock, LockOpen, Printer } from 'lucide-react';
+import { CopyButton } from '../components/CopyButton';
+import { Badge, Button, Card, Field, IssueList, MoneyInput, PageHeader, percentOf, ProgressBar, Toggle } from '../components/ui';
 import { PaymentConfigList } from '../features/payments/PaymentConfigList';
 import { PaymentResultTable } from '../features/payments/PaymentResultTable';
 import { ReconcilePanel } from '../features/payments/ReconcilePanel';
@@ -8,9 +9,8 @@ import { NoSessionState, SessionPicker } from '../features/sessions/SessionPicke
 import { useAppData } from '../hooks/useAppData';
 import { useFeedback } from '../hooks/useFeedback';
 import { generateZaloPaymentText } from '../services/exportService';
-import { applyPaidToRow, calculateSessionPayments, type PaymentRow } from '../services/paymentService';
+import { applyPaidToRow, calculateSessionPayments, markAllPaid, type PaymentRow } from '../services/paymentService';
 import { validatePayments } from '../services/validationService';
-import { copyToClipboard } from '../utils/browser';
 import { formatSessionDate, formatVND } from '../utils/format';
 
 export function PaymentsPage() {
@@ -44,10 +44,18 @@ export function PaymentsPage() {
     if (ok) updateSession({ ...session, paymentLocked: false });
   };
 
-  const copyZalo = async () => {
-    const ok = await copyToClipboard(generateZaloPaymentText(session, settings));
-    toast(ok ? 'Đã copy nội dung gửi Zalo.' : 'Không copy được, hãy thử lại.', ok ? 'success' : 'error');
+  const collectAll = async () => {
+    const ok = await confirm({
+      title: 'Thu đủ tất cả',
+      message: `Đánh dấu tất cả ${rows.length} dòng là đã đóng đủ?\nCòn thiếu hiện tại: ${formatVND(reconciliation.totalOutstanding)}.`,
+      confirmLabel: 'Đánh dấu đã thu đủ',
+    });
+    if (!ok) return;
+    updateSession({ ...session, payments: markAllPaid(session, settings) });
+    toast('Đã đánh dấu tất cả đã đóng đủ.');
   };
+
+  const paidRows = rows.filter((row) => row.outstanding === 0).length;
 
   return (
     <>
@@ -105,9 +113,12 @@ export function PaymentsPage() {
               }
               actions={
                 <div className="flex flex-wrap gap-2 print:hidden">
-                  <Button size="sm" variant="primary" icon={<Copy size={14} aria-hidden="true" />} onClick={() => void copyZalo()}>
-                    Copy gửi Zalo
-                  </Button>
+                  <CopyButton variant="primary" label="Copy gửi Zalo" successMessage="Đã copy nội dung gửi Zalo." getText={() => generateZaloPaymentText(session, settings)} />
+                  {!locked && reconciliation.totalOutstanding > 0 && (
+                    <Button size="sm" icon={<CheckCheck size={14} aria-hidden="true" />} onClick={() => void collectAll()}>
+                      Thu đủ tất cả
+                    </Button>
+                  )}
                   <Button size="sm" icon={<FileSpreadsheet size={14} aria-hidden="true" />} onClick={() => downloadSessionCSV(session, settings)}>
                     CSV
                   </Button>
@@ -123,6 +134,20 @@ export function PaymentsPage() {
                 </div>
               }
             >
+              <div className="mb-4 rounded-xl bg-slate-50 p-3 print:hidden">
+                <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+                  <p className="text-slate-700">
+                    Đã thu <span className="font-bold tabular-nums text-slate-900">{formatVND(reconciliation.totalCollected)}</span> /{' '}
+                    <span className="tabular-nums">{formatVND(reconciliation.totalPayable)}</span>
+                    <span className="ml-1.5 font-semibold text-slate-900">({percentOf(reconciliation.totalCollected, reconciliation.totalPayable)}%)</span>
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    {paidRows}/{rows.length} dòng đã đủ
+                    {reconciliation.totalOutstanding === 0 && reconciliation.totalPayable > 0 && ' • ✓ Đã thu đủ'}
+                  </p>
+                </div>
+                <ProgressBar label="Tiến độ thu tiền" value={reconciliation.totalCollected} max={reconciliation.totalPayable} />
+              </div>
               <PaymentResultTable rows={rows} reconciliation={reconciliation} date={session.date} onPaidChange={locked ? undefined : setPaid} />
             </Card>
 

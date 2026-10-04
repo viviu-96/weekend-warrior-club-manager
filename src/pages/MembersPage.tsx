@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Button, Card, cx, EmptyState, PageHeader, Select, TextInput } from '../components/ui';
+import { Avatar, Button, Card, cx, EmptyState, PageHeader, Select, TextInput } from '../components/ui';
 import { LevelBadge } from '../features/members/fields';
 import { MemberFormModal } from '../features/members/MemberFormModal';
 import { useAppData } from '../hooks/useAppData';
@@ -110,11 +110,16 @@ export function MembersPage() {
             </thead>
             <tbody>
               {visible.map((member, index) => (
-                <tr key={member.id} className="border-b border-slate-100 hover:bg-slate-50">
+                <tr key={member.id} className="border-b border-slate-100 transition-colors hover:bg-emerald-50/50">
                   <td className="py-2 pr-2 tabular-nums text-slate-500">{index + 1}</td>
                   <td className="py-2 pr-2">
-                    <span className="font-semibold text-slate-900">{member.name}</span>
-                    {member.note && <span className="block text-xs text-slate-500 sm:hidden">{member.note}</span>}
+                    <span className="flex items-center gap-2.5">
+                      <Avatar name={member.name} gender={member.gender} />
+                      <span>
+                        <span className="font-semibold text-slate-900">{member.name}</span>
+                        {member.note && <span className="block text-xs text-slate-500 sm:hidden">{member.note}</span>}
+                      </span>
+                    </span>
                   </td>
                   <td className="py-2 pr-2 text-slate-700">{GENDER_LABELS[member.gender]}</td>
                   <td className="py-2 pr-2">

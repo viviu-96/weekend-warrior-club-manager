@@ -1,5 +1,5 @@
-import { Check } from 'lucide-react';
-import { Badge, MoneyInput } from '../../components/ui';
+import { Check, Undo2 } from 'lucide-react';
+import { Badge, cx, MoneyInput } from '../../components/ui';
 import type { PaymentRow, PaymentStatus, Reconciliation } from '../../services/paymentService';
 import { formatVND, getDayShort } from '../../utils/format';
 
@@ -36,16 +36,28 @@ export function PaymentResultTable({ rows, reconciliation, date, onPaidChange }:
     onPaidChange ? (
       <div className="flex items-center justify-end gap-1">
         <MoneyInput className="w-28" label={`Đã thu của ${row.name}`} value={row.paidAmount} onChange={(amount) => onPaidChange(row, amount)} />
-        <button
-          type="button"
-          title="Đánh dấu đã thu đủ"
-          aria-label={`Đánh dấu ${row.name} đã đóng đủ`}
-          disabled={row.outstanding === 0}
-          onClick={() => onPaidChange(row, fullAmount(row))}
-          className="rounded-lg border border-slate-300 p-2 text-emerald-800 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-30 print:hidden"
-        >
-          <Check size={16} aria-hidden="true" />
-        </button>
+        {row.outstanding === 0 && row.paidAmount > 0 ? (
+          <button
+            type="button"
+            title="Bỏ đánh dấu đã thu"
+            aria-label={`Bỏ đánh dấu đã thu của ${row.name}`}
+            onClick={() => onPaidChange(row, 0)}
+            className="rounded-lg border border-slate-300 bg-white p-2 text-slate-600 transition hover:bg-slate-100 active:scale-90 print:hidden"
+          >
+            <Undo2 size={16} aria-hidden="true" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            title="Đánh dấu đã thu đủ"
+            aria-label={`Đánh dấu ${row.name} đã đóng đủ`}
+            disabled={row.outstanding === 0}
+            onClick={() => onPaidChange(row, fullAmount(row))}
+            className="rounded-lg border border-emerald-600 bg-emerald-50 p-2 text-emerald-800 transition hover:bg-emerald-100 active:scale-90 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-white disabled:opacity-30 print:hidden"
+          >
+            <Check size={16} aria-hidden="true" />
+          </button>
+        )}
       </div>
     ) : (
       formatVND(row.paidAmount)
@@ -72,7 +84,7 @@ export function PaymentResultTable({ rows, reconciliation, date, onPaidChange }:
           </thead>
           <tbody className="tabular-nums [&_td:not(:last-child)]:whitespace-nowrap">
             {rows.map((row, index) => (
-              <tr key={row.key} className="border-b border-slate-100 align-middle">
+              <tr key={row.key} className={cx('border-b border-slate-100 align-middle transition-colors', row.status === 'paid' ? 'bg-emerald-50/60 print:bg-transparent' : 'hover:bg-slate-50')}>
                 <td className="py-2 pr-2 text-slate-500">{index + 1}</td>
                 <td className="py-2 pr-2">
                   <span className="font-semibold text-slate-900">{row.name}</span>
@@ -113,7 +125,7 @@ export function PaymentResultTable({ rows, reconciliation, date, onPaidChange }:
       {/* Mobile */}
       <ul className="space-y-3 md:hidden print:hidden">
         {rows.map((row) => (
-          <li key={row.key} className="rounded-lg border border-slate-200 p-3">
+          <li key={row.key} className={cx('rounded-xl border p-3 transition-colors', row.status === 'paid' ? 'border-emerald-200 bg-emerald-50/60' : 'border-slate-200')}>
             <div className="flex items-center justify-between gap-2">
               <span className="text-base font-semibold text-slate-900">{row.name}</span>
               <Badge tone={STATUS[row.status].tone}>{STATUS[row.status].label}</Badge>

@@ -1,6 +1,6 @@
 import { Trash2, UserPlus } from 'lucide-react';
 import { useState } from 'react';
-import { cx, TextInput } from '../../components/ui';
+import { Avatar, cx, TextInput } from '../../components/ui';
 import { useAppData } from '../../hooks/useAppData';
 import { useFeedback } from '../../hooks/useFeedback';
 import { createMember, genderLabel } from '../../services/memberService';
@@ -39,15 +39,31 @@ export function PlayerList({ session, disabled, onChange }: Props) {
     return <p className="rounded-lg border border-dashed border-slate-300 px-3 py-6 text-center text-sm text-slate-500">Chưa có người chơi. Hãy thêm thành viên hoặc người vãng lai ở trên.</p>;
   }
 
+  const count = (test: (player: SessionPlayer) => boolean) => session.players.filter(test).length;
+  const summary = [
+    { label: 'Nam', value: count((p) => p.gender === 'male') },
+    { label: 'Nữ', value: count((p) => p.gender === 'female') },
+    { label: 'Vãng lai', value: count((p) => p.playerType === 'walk_in') },
+    { label: 'Nghỉ', value: count((p) => p.resting) },
+  ].filter((item) => item.value > 0);
+
   return (
     <>
+      <p className="mb-1 flex flex-wrap gap-1.5 text-xs text-slate-600">
+        {summary.map((item) => (
+          <span key={item.label} className="rounded-full bg-slate-100 px-2 py-0.5">
+            {item.label} <span className="font-semibold text-slate-900">{item.value}</span>
+          </span>
+        ))}
+      </p>
       <ul className="divide-y divide-slate-100">
         {session.players.map((player, index) => {
           const isWalkIn = player.playerType === 'walk_in';
           const incomplete = !player.name.trim() || !player.gender || !player.level;
           return (
-            <li key={player.id} className={cx('flex flex-wrap items-center gap-x-3 gap-y-2 py-2', player.resting && 'opacity-60')}>
-              <span className="w-6 shrink-0 text-right text-xs tabular-nums text-slate-500">{index + 1}</span>
+            <li key={player.id} className={cx('-mx-2 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg px-2 py-2 transition-colors hover:bg-slate-50', player.resting && 'opacity-60')}>
+              <span className="w-5 shrink-0 text-right text-xs tabular-nums text-slate-500">{index + 1}</span>
+              <Avatar name={player.name} gender={player.gender} />
 
               <div className="min-w-0 flex-1 basis-32">
                 {isWalkIn && !disabled ? (

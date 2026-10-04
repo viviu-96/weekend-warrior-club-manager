@@ -24,8 +24,8 @@ export const inputClass =
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-emerald-700 text-white hover:bg-emerald-800 border-transparent',
-  secondary: 'bg-white text-slate-800 hover:bg-slate-50 border-slate-300',
+  primary: 'bg-emerald-700 text-white hover:bg-emerald-800 border-transparent shadow-sm shadow-emerald-900/25',
+  secondary: 'bg-white text-slate-800 hover:bg-slate-50 hover:border-slate-400 border-slate-300',
   ghost: 'bg-transparent text-slate-700 hover:bg-slate-100 border-transparent',
   danger: 'bg-white text-red-700 hover:bg-red-50 border-red-300',
 };
@@ -42,8 +42,8 @@ export function Button({ variant = 'secondary', size = 'md', icon, className, ch
       type="button"
       {...rest}
       className={cx(
-        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border font-medium transition-colors',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border font-medium transition active:scale-[0.97]',
+        'disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100',
         size === 'sm' ? 'px-2.5 py-1.5 text-xs' : 'px-3.5 py-2 text-sm',
         BUTTON_VARIANTS[variant],
         className,
@@ -100,7 +100,7 @@ export function Card({ title, actions, children, className, collapsible = false,
   const [open, toggle] = useCollapse(collapsible ? storageKey : undefined, defaultOpen);
   const expanded = !collapsible || open;
   return (
-    <section className={cx('rounded-xl border border-slate-200 bg-white shadow-sm', className)}>
+    <section className={cx('animate-rise rounded-xl border border-slate-200/80 bg-white shadow-sm shadow-slate-900/5', className)}>
       {(title || actions) && (
         <header className={cx('flex flex-wrap items-center justify-between gap-2 px-4 py-3', expanded && 'border-b border-slate-100')}>
           <h2 className="min-w-0 text-sm font-semibold text-slate-900">
@@ -135,7 +135,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3 print:hidden">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">{title}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
         {description && <p className="mt-0.5 text-sm text-slate-600">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -143,9 +143,10 @@ export function PageHeader({ title, description, actions }: { title: string; des
   );
 }
 
-export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
+export function EmptyState({ title, description, action, icon }: { title: string; description?: string; action?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-10 text-center">
+    <div className="animate-rise rounded-xl border border-dashed border-slate-300 bg-white/70 px-4 py-10 text-center">
+      {icon && <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-800">{icon}</div>}
       <p className="text-sm font-semibold text-slate-800">{title}</p>
       {description && <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">{description}</p>}
       {action && <div className="mt-4 flex justify-center">{action}</div>}
@@ -284,13 +285,13 @@ export function Modal({ title, onClose, children, footer, wide }: ModalProps) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 sm:items-center sm:p-4 print:hidden" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="animate-fade fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-[2px] sm:items-center sm:p-4 print:hidden" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={cx('flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-md')}
+        className={cx('animate-pop flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-md')}
       >
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
           <h2 id={titleId} className="text-base font-semibold text-slate-900">
@@ -330,4 +331,65 @@ export function IssueList({ issues }: { issues: ValidationIssue[] }) {
       {block(warnings, `⚠ Lưu ý (${warnings.length})`, 'border-amber-200 bg-amber-50 text-amber-900')}
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+
+const AVATAR_TONES = {
+  male: 'bg-sky-100 text-sky-900 ring-sky-200',
+  female: 'bg-rose-100 text-rose-900 ring-rose-200',
+  unknown: 'bg-slate-100 text-slate-600 ring-slate-200',
+};
+
+/** Hình tròn chữ cái đầu của tên; màu theo giới tính (giới tính luôn được ghi bằng chữ bên cạnh). */
+export function Avatar({ name, gender, size = 'md' }: { name: string; gender: 'male' | 'female' | null; size?: 'sm' | 'md' }) {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const initial = (words[words.length - 1]?.[0] ?? '?').toUpperCase();
+  return (
+    <span
+      aria-hidden="true"
+      className={cx(
+        'inline-flex shrink-0 items-center justify-center rounded-full font-semibold ring-1 ring-inset',
+        size === 'sm' ? 'h-6 w-6 text-[11px]' : 'h-8 w-8 text-sm',
+        AVATAR_TONES[gender ?? 'unknown'],
+      )}
+    >
+      {initial}
+    </span>
+  );
+}
+
+interface ProgressBarProps {
+  value: number;
+  max: number;
+  /** Mô tả cho trình đọc màn hình, ví dụ "Đã thu". */
+  label: string;
+  /** Nền tối (thẻ nổi bật màu xanh) dùng thanh sáng. */
+  onDark?: boolean;
+  className?: string;
+}
+
+/** Thanh tiến độ một màu trên nền trung tính. Con số luôn được ghi bằng chữ bên cạnh. */
+export function ProgressBar({ value, max, label, onDark = false, className }: ProgressBarProps) {
+  const ratio = max > 0 ? Math.min(Math.max(value / max, 0), 1) : 0;
+  const percent = Math.round(ratio * 100);
+  return (
+    <div
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percent}
+      className={cx('h-2 overflow-hidden rounded-full', onDark ? 'bg-white/25' : 'bg-slate-200', className)}
+    >
+      <div
+        className={cx('h-full rounded-full transition-[width] duration-500 ease-out', onDark ? 'bg-white' : 'bg-emerald-600')}
+        style={{ width: `${percent}%` }}
+      />
+    </div>
+  );
+}
+
+export function percentOf(value: number, max: number): number {
+  return max > 0 ? Math.round(Math.min(Math.max(value / max, 0), 1) * 100) : 0;
 }
