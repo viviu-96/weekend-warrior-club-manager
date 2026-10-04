@@ -1,0 +1,19 @@
+{
+  "clubName": "Weekend Warrior Badminton Club",
+  "levels": [
+    { "name": "New", "score": 1 },
+    { "name": "Y", "score": 2 },
+    { "name": "Y+", "score": 3 },
+    { "name": "TBY", "score": 4 },
+    { "name": "TB-", "score": 5 },
+    { "name": "TB", "score": 6 },
+    { "name": "TB+", "score": 7 },
+    { "name": "TBK", "score": 8 },
+    { "name": "Khá", "score": 9 },
+    { "name": "Bán chuyên", "score": 10 }
+  ],
+  "halfPlayCourtMode": "full",
+  "defaultCourtCount": 2,
+  "defaultTime": "08:00-10:00",
+  "mergeGuestsByDefault": true
+}
