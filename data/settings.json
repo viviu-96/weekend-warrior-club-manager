@@ -13,7 +13,7 @@
     { "name": "Bán chuyên", "score": 10 }
   ],
   "halfPlayCourtMode": "full",
-  "defaultCourtCount": 2,
+  "defaultCourtCount": 1,
   "defaultTime": "08:00-10:00",
   "mergeGuestsByDefault": true
 }

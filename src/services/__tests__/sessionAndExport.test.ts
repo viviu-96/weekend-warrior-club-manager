@@ -79,7 +79,7 @@ describe('sessionService', () => {
 
   it('createSession dùng giá trị mặc định từ cài đặt', () => {
     const session = createSession(SETTINGS, [], '2026-10-03');
-    expect(session).toMatchObject({ dayOfWeek: 'Thứ 7', courtCount: 2, time: '08:00-10:00', courtCost: 0, players: [] });
+    expect(session).toMatchObject({ dayOfWeek: 'Thứ 7', courtCount: 1, time: '08:00-10:00', courtCost: 0, players: [] });
   });
 
   it('duplicateSession giữ người chơi, reset chi phí / thanh toán / xếp cặp', () => {
