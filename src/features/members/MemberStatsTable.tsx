@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Avatar, cx } from '../../components/ui';
+import { Avatar, cx, Select } from '../../components/ui';
 import { useAppData } from '../../hooks/useAppData';
 import { calculateMemberStats, sortMembersByStats, type StatsSortKey } from '../../services/statsService';
 import type { Member } from '../../types';
@@ -33,8 +33,97 @@ export function MemberStatsTable({ members }: { members: Member[] }) {
     );
   };
 
+  const SORT_OPTIONS: { key: StatsSortKey; label: string }[] = [
+    { key: 'sessionsPlayed', label: 'Số buổi' },
+    { key: 'matchesPlayed', label: 'Số trận' },
+    { key: 'wins', label: 'Số trận thắng' },
+    { key: 'winRate', label: 'Tỉ lệ thắng' },
+    { key: 'totalPaid', label: 'Đã đóng' },
+    { key: 'outstanding', label: 'Còn nợ' },
+    { key: 'name', label: 'Tên' },
+  ];
+
   return (
-    <div className="overflow-x-auto">
+    <div>
+      {/* Mobile: mỗi thành viên một thẻ */}
+      <div className="md:hidden">
+        <label className="mb-3 flex items-center gap-2 text-sm text-slate-700">
+          <span className="shrink-0">Sắp xếp theo</span>
+          <Select
+            value={sort.key}
+            onChange={(event) => {
+              const key = event.target.value as StatsSortKey;
+              setSort({ key, direction: key === 'name' ? 'asc' : 'desc' });
+            }}
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </label>
+        <ul className="space-y-3">
+          {visible.map((member) => {
+            const item = stats.get(member.id);
+            return (
+              <li key={member.id} className="rounded-xl border border-slate-200 p-3">
+                <div className="flex items-center gap-2.5">
+                  <Avatar name={member.name} gender={member.gender} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-slate-900">{member.name}</p>
+                    <p className="text-xs text-slate-500">{item?.lastPlayedDate ? `Chơi gần nhất ${formatDate(item.lastPlayedDate)}` : 'Chưa tham gia buổi nào'}</p>
+                  </div>
+                  {item && item.winRate !== null && (
+                    <span className="shrink-0 text-right text-xs text-slate-600">
+                      Tỉ lệ thắng
+                      <span className="block text-base font-bold tabular-nums text-slate-900">{item.winRate}%</span>
+                    </span>
+                  )}
+                </div>
+                <dl className="mt-2.5 grid grid-cols-3 gap-2 text-center tabular-nums">
+                  <div className="rounded-lg bg-slate-50 px-1 py-1.5">
+                    <dt className="text-[11px] text-slate-600">Số buổi</dt>
+                    <dd className="text-sm font-semibold text-slate-900">{item?.sessionsPlayed ?? 0}</dd>
+                  </div>
+                  <div className="rounded-lg bg-slate-50 px-1 py-1.5">
+                    <dt className="text-[11px] text-slate-600">Số trận</dt>
+                    <dd className="text-sm font-semibold text-slate-900">{item?.matchesPlayed ?? 0}</dd>
+                  </div>
+                  <div className="rounded-lg bg-slate-50 px-1 py-1.5">
+                    <dt className="text-[11px] text-slate-600">Thắng – Thua</dt>
+                    <dd className="text-sm font-semibold text-slate-900">
+                      {item && item.matchesScored > 0 ? `${item.wins} – ${item.losses}${item.draws > 0 ? ` (${item.draws} hoà)` : ''}` : '–'}
+                    </dd>
+                  </div>
+                </dl>
+                {item && item.topPartners.length > 0 && (
+                  <p className="mt-2 flex flex-wrap items-center gap-1 text-xs text-slate-600">
+                    Hay ghép:
+                    {item.topPartners.map((partner) => (
+                      <span key={`${partner.memberId ?? 'walkin'}-${partner.name}`} className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">
+                        {partner.name} <span className="font-semibold text-slate-900">×{partner.count}</span>
+                      </span>
+                    ))}
+                  </p>
+                )}
+                <p className="mt-2 flex items-baseline justify-between gap-3 border-t border-slate-100 pt-2 text-sm tabular-nums">
+                  <span className="text-slate-600">
+                    Đã đóng <span className="font-semibold text-slate-900">{formatVND(item?.totalPaid ?? 0)}</span>
+                  </span>
+                  {item && item.outstanding > 0 ? (
+                    <span className="font-semibold text-red-700">Còn nợ {formatVND(item.outstanding)}</span>
+                  ) : (
+                    <span className="font-medium text-emerald-800">✓ Không nợ</span>
+                  )}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
       <table className="w-full min-w-[860px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs font-semibold text-slate-600">
@@ -99,6 +188,7 @@ export function MemberStatsTable({ members }: { members: Member[] }) {
           })}
         </tbody>
       </table>
+      </div>
       <p className="mt-3 text-xs text-slate-500">
         Số buổi chỉ tính buổi có tham gia chơi. Thắng – Thua và tỉ lệ thắng chỉ tính các trận đã ghi tỉ số. Tiền gồm cả phần của khách đi cùng; “Đã đóng” gồm cả tiền ứng trước.
       </p>
