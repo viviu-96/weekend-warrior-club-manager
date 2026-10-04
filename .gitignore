@@ -1,0 +1,8 @@
+node_modules
+dist
+
+# Dữ liệu thật của CLB (tên thành viên, tiền thu) chỉ nằm trên máy.
+# Khi chưa có, server tự tạo từ src/data/seed.
+data/
+*.tmp
+*.log
