@@ -165,6 +165,13 @@ Trình độ chính thức: New 1 · Y 2 · Y+ 3 · TBY 4 · TB- 5 · TB 6 · TB
   **không ghi đè** lên file đó. Sửa file hoặc copy file `.bak` đè lên rồi bấm "Thử tải lại".
 - File chưa tồn tại sẽ được tạo từ dữ liệu mẫu.
 
+### Dữ liệu mẫu
+
+`src/data/seed/` có 4 buổi mẫu (19, 20, 26, 27/09/2026) để mọi màn hình đều có dữ liệu: nhiều lượt đấu có
+xoay vòng người chờ, tỉ số đúng luật, khách có người giới thiệu, người không chơi, chơi nửa buổi, tiền ứng,
+đóng góp cầu, buổi đã thu đủ và buổi còn nợ. Các buổi mẫu có ghi chú "Dữ liệu mẫu"; xoá chúng ở trang
+Lịch sử khi không cần nữa.
+
 ## Backup & restore
 
 **Backup** – một trong hai cách:
@@ -238,13 +245,18 @@ còn nợ, số trận thắng – thua và tỉ lệ thắng. Tiền gồm cả
 
 ### Tỉ số trận đấu
 
-- Mỗi trận có hai ô tỉ số cạnh chữ VS (`scoreA`, `scoreB` trong `sessions.json`). Đội điểm cao hơn là đội
-  thắng và được gắn nhãn 🏆 Thắng; bằng điểm là hoà. Trận chưa nhập đủ hai ô thì chưa có kết quả.
+- Mỗi trận có hai ô tỉ số cạnh chữ VS (`scoreA`, `scoreB` trong `sessions.json`). Đội thắng được gắn nhãn
+  🏆 Thắng. Trận chưa nhập đủ hai ô thì chưa có kết quả.
+- **Luật tính điểm** (`SCORE_RULES` trong `pairingService.ts`): mỗi trận 1 ván (BO1), 21 điểm; khi 20–20 thì
+  đánh tiếp tới khi cách 2 điểm; tối đa 25 điểm (24–24 thì ai lên 25 trước là thắng). Tỉ số hợp lệ: 21–0 đến
+  21–19, 22–20, 23–21, 24–22, 25–23, 25–24. Không có kết quả hoà.
+- Tỉ số sai luật (ví dụ 21–20, 22–15, 26–24) hiện cảnh báo ngay dưới trận, không được tính thắng/thua và
+  không đưa vào nội dung Copy.
 - Tỉ số nhập được cả khi kết quả xếp cặp đã khoá, vì thường nhập sau khi đánh xong.
 - Xếp lại một lượt đã có tỉ số sẽ xoá tỉ số của lượt đó (ứng dụng hỏi lại trước).
 - Thắng – thua và tỉ lệ thắng ở trang Thành viên chỉ tính các trận đã ghi tỉ số.
 - Trang Thành viên → Thống kê có **biểu đồ thắng / thua**: mỗi thành viên một thanh, thua mọc sang trái (đỏ),
-  thắng mọc sang phải (xanh dương), hoà màu xám ở giữa; xếp theo tỉ lệ thắng. Rê chuột hoặc chạm vào một dòng
+  thắng mọc sang phải (xanh dương); xếp theo tỉ lệ thắng. Rê chuột hoặc chạm vào một dòng
   để xem số liệu chi tiết.
 
 ## Thuật toán xếp cặp
@@ -303,11 +315,11 @@ Sân: 28.000/người. Cầu: 9 người chịu → suất chuẩn 21.000, nửa
 
 ## Kiểm thử
 
-`npm test` chạy 112 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
+`npm test` chạy 134 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
 giới tính, vãng lai, xếp lại, lịch sử partner, chia sân, làm tròn, tiền sân/cầu, không chơi, nửa buổi,
 ứng trước, đóng góp cầu, gộp 1 và 2 khách, không gộp, còn thiếu, đóng dư, đối soát, nhân bản buổi,
 validation, import lỗi, nội dung Zalo, CSV, JSON, nhiều lượt đấu và xoay vòng người chờ, bảng thu gộp,
-công nợ, thống kê thành viên, tỉ số và thắng/thua.
+công nợ, thống kê thành viên, luật tính điểm, tỉ số và thắng/thua.
 
 ## Hướng phát triển
 

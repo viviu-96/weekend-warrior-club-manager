@@ -22,6 +22,7 @@ import {
   hasScores,
   reassignCourts,
   removeRound,
+  SCORE_RULES,
   setMatchScore,
   setRoundMatches,
   swapPlayers,
@@ -342,7 +343,8 @@ export function PairingPage() {
 
               <div className="print:hidden">
                 <PairingResultView session={session} round={round} levels={levels} showStrength={showStrength} editing={editing && !locked} selectedId={selectedId} onPick={pick} onScoreChange={setScore} />
-                <p className="mt-3 text-xs text-slate-500">Nhập tỉ số vào hai ô cạnh chữ VS sau khi đánh xong – dùng cho thống kê thắng/thua ở trang Thành viên. Tỉ số vẫn nhập được khi kết quả đã khoá.</p>
+                <p className="mt-3 text-xs text-slate-500">Nhập tỉ số vào hai ô cạnh chữ VS sau khi đánh xong. Luật: 1 ván {SCORE_RULES.target} điểm; {SCORE_RULES.target - 1}–{SCORE_RULES.target - 1} thì đánh tiếp tới khi cách{' '}
+                  {SCORE_RULES.deuceMargin} điểm, tối đa {SCORE_RULES.cap} điểm. Tỉ số vẫn nhập được khi kết quả đã khoá.</p>
               </div>
 
               {/* Bản in: tất cả các lượt */}

@@ -2,9 +2,9 @@ import { Avatar } from '../../components/ui';
 import { buildWinLossChart, type MemberStats } from '../../services/statsService';
 import type { Member } from '../../types';
 
-// Cặp màu phân kỳ (xanh dương ↔ đỏ) đã kiểm tra phân biệt được với người mù màu trên nền trắng;
-// hoà dùng màu xám trung tính ở giữa. Chữ luôn dùng màu chữ, không dùng màu của thanh.
-const COLOR = { win: '#2a78d6', loss: '#e34948', draw: '#cbd5e1' };
+// Cặp màu phân kỳ (xanh dương ↔ đỏ) đã kiểm tra phân biệt được với người mù màu trên nền trắng.
+// Chữ luôn dùng màu chữ, không dùng màu của thanh.
+const COLOR = { win: '#2a78d6', loss: '#e34948' };
 // Chừa chỗ cho con số ở đầu thanh để thanh dài nhất không đẩy số ra ngoài.
 const LABEL_SPACE = '1.75rem';
 
@@ -18,8 +18,8 @@ function Swatch({ color, label }: { color: string; label: string }) {
 }
 
 /**
- * Biểu đồ thắng / thua theo thành viên: thua mọc sang trái, thắng mọc sang phải từ trục giữa,
- * hoà nằm ngay hai bên trục. Chỉ tính các trận đã ghi tỉ số.
+ * Biểu đồ thắng / thua theo thành viên: thua mọc sang trái, thắng mọc sang phải từ trục giữa.
+ * Chỉ tính các trận đã ghi tỉ số đúng luật.
  */
 export function WinLossChart({ members, stats }: { members: Member[]; stats: Map<string, MemberStats> }) {
   const { rows, max } = buildWinLossChart(members, stats);
@@ -40,7 +40,6 @@ export function WinLossChart({ members, stats }: { members: Member[]; stats: Map
         <span className="text-sm font-semibold text-slate-900">Thắng / thua theo thành viên</span>
         <span className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
           <Swatch color={COLOR.loss} label="Thua" />
-          <Swatch color={COLOR.draw} label="Hoà" />
           <Swatch color={COLOR.win} label="Thắng" />
         </span>
       </figcaption>
@@ -55,8 +54,8 @@ export function WinLossChart({ members, stats }: { members: Member[]; stats: Map
       </div>
 
       <ul>
-        {rows.map(({ member, wins, losses, draws, winRate, matchesScored }) => {
-          const summary = `${member.name}: ${wins} thắng, ${losses} thua${draws > 0 ? `, ${draws} hoà` : ''} trên ${matchesScored} trận – tỉ lệ thắng ${winRate}%`;
+        {rows.map(({ member, wins, losses, winRate, matchesScored }) => {
+          const summary = `${member.name}: ${wins} thắng, ${losses} thua trên ${matchesScored} trận – tỉ lệ thắng ${winRate}%`;
           return (
             <li
               key={member.id}
@@ -74,15 +73,13 @@ export function WinLossChart({ members, stats }: { members: Member[]; stats: Map
               <span className="relative grid grid-cols-2" aria-hidden="true">
                 {/* Trục giữa */}
                 <span className="pointer-events-none absolute inset-y-[-6px] left-1/2 w-px bg-slate-300" />
-                {/* Nửa trái: thua, rồi nửa phần hoà sát trục */}
+                {/* Nửa trái: thua */}
                 <span className="flex items-center justify-end gap-0.5 pr-px">
                   <span className="w-6 shrink-0 pr-1 text-right text-xs tabular-nums text-slate-700">{losses > 0 ? losses : ''}</span>
                   {losses > 0 && <span className="h-4 rounded-l-[4px]" style={{ width: width(losses), backgroundColor: COLOR.loss }} />}
-                  {draws > 0 && <span className="h-4" style={{ width: width(draws / 2), backgroundColor: COLOR.draw }} />}
                 </span>
-                {/* Nửa phải: nửa phần hoà sát trục, rồi thắng */}
+                {/* Nửa phải: thắng */}
                 <span className="flex items-center gap-0.5 pl-px">
-                  {draws > 0 && <span className="h-4" style={{ width: width(draws / 2), backgroundColor: COLOR.draw }} />}
                   {wins > 0 && <span className="h-4 rounded-r-[4px]" style={{ width: width(wins), backgroundColor: COLOR.win }} />}
                   <span className="w-6 shrink-0 pl-1 text-xs tabular-nums text-slate-700">{wins > 0 ? wins : ''}</span>
                 </span>
@@ -98,7 +95,7 @@ export function WinLossChart({ members, stats }: { members: Member[]; stats: Map
                 className="pointer-events-none absolute left-1/2 top-full z-10 hidden w-max max-w-[16rem] -translate-x-1/2 rounded-lg bg-slate-900 px-3 py-2 text-xs text-white shadow-lg group-hover:block group-focus-visible:block"
               >
                 <span className="block font-semibold">{member.name}</span>
-                {wins} thắng • {losses} thua{draws > 0 ? ` • ${draws} hoà` : ''}
+                {wins} thắng • {losses} thua
                 <span className="block text-slate-300">
                   {matchesScored} trận đã ghi tỉ số • tỉ lệ thắng {winRate}%
                 </span>

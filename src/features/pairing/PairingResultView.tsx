@@ -1,6 +1,14 @@
 import { CircleCheck, Scale, Trophy } from 'lucide-react';
 import { Avatar, cx } from '../../components/ui';
-import { calculateMatchBalance, getMatchWinner, getRoundMatches, getRounds, getWaitingPlayers } from '../../services/pairingService';
+import {
+  calculateMatchBalance,
+  getMatchWinner,
+  getRoundMatches,
+  getRounds,
+  getWaitingPlayers,
+  SCORE_RULES,
+  validateMatchScore,
+} from '../../services/pairingService';
 import type { Level, Match, Session, SessionPlayer, TeamIds } from '../../types';
 import { LevelBadge } from '../members/fields';
 
@@ -69,7 +77,7 @@ export function PairingResultView({ session, round, levels, showStrength, editin
         type="number"
         inputMode="numeric"
         min={0}
-        max={99}
+        max={SCORE_RULES.cap}
         aria-label={`Tỉ số đội ${side} trận ${match.matchNumber}`}
         placeholder="–"
         value={value ?? ''}
@@ -111,12 +119,12 @@ export function PairingResultView({ session, round, levels, showStrength, editin
     const [a1, a2, b1, b2] = [...match.teamA, ...match.teamB].map((id) => byId.get(id));
     const balance = a1 && a2 && b1 && b2 ? calculateMatchBalance([a1, a2], [b1, b2], levels) : null;
     const winner = getMatchWinner(match);
+    const scoreError = validateMatchScore(match);
     return (
       <div key={match.id} className="rounded-xl border border-emerald-200/70 bg-emerald-50/60 p-3 transition hover:border-emerald-300 hover:shadow-sm print:break-inside-avoid">
         <div className="mb-2 flex items-center justify-between gap-2">
           <p className="text-xs font-bold uppercase tracking-wide text-emerald-900">
             Trận {match.matchNumber}
-            {winner === 'draw' && <span className="ml-2 font-medium normal-case text-slate-600">• Hoà</span>}
           </p>
           {showStrength &&
             balance &&
@@ -139,6 +147,11 @@ export function PairingResultView({ session, round, levels, showStrength, editin
           </div>
           {team(match.teamB, 'Đội B', balance?.teamBStrength ?? null, winner === 'B')}
         </div>
+        {scoreError && (
+          <p role="alert" className="mt-2 text-center text-xs font-medium text-red-700">
+            ⚠ Tỉ số chưa đúng luật: {scoreError}
+          </p>
+        )}
       </div>
     );
   };

@@ -537,14 +537,57 @@ export function swapPlayers(matches: Match[], playerA: string, playerB: string, 
 // Kết quả trận đấu
 // ---------------------------------------------------------------------------
 
-export type MatchWinner = 'A' | 'B' | 'draw';
+export interface ScoreRules {
+  /** Số điểm để thắng ván. */
+  target: number;
+  /** Khi hai đội cùng chạm `target - 1` (deuce), phải hơn nhau từng này điểm mới thắng. */
+  deuceMargin: number;
+  /** Điểm tối đa: đội chạm mốc này trước thì thắng dù chỉ hơn 1 điểm. */
+  cap: number;
+}
 
-/** Đội thắng theo tỉ số đã ghi; null khi trận chưa có đủ tỉ số của hai đội. */
-export function getMatchWinner(match: Pick<Match, 'scoreA' | 'scoreB'>): MatchWinner | null {
+/** Luật của CLB: mỗi trận 1 ván (BO1), 21 điểm, deuce cách 2 điểm, tối đa 25 điểm. */
+export const SCORE_RULES: ScoreRules = { target: 21, deuceMargin: 2, cap: 25 };
+
+export type MatchWinner = 'A' | 'B';
+
+type ScorePair = Pick<Match, 'scoreA' | 'scoreB'>;
+
+function bothScores(match: ScorePair): [number, number] | null {
   const { scoreA, scoreB } = match;
   if (scoreA === null || scoreA === undefined || scoreB === null || scoreB === undefined) return null;
-  if (scoreA === scoreB) return 'draw';
-  return scoreA > scoreB ? 'A' : 'B';
+  return [scoreA, scoreB];
+}
+
+/**
+ * Kiểm tra tỉ số theo luật. Trả về null khi hợp lệ hoặc khi chưa nhập đủ hai ô;
+ * ngược lại trả về lý do bằng tiếng Việt để hiển thị cho admin.
+ */
+export function validateMatchScore(match: ScorePair, rules: ScoreRules = SCORE_RULES): string | null {
+  const scores = bothScores(match);
+  if (!scores) return null;
+  const high = Math.max(...scores);
+  const low = Math.min(...scores);
+  const deuce = rules.target - 1;
+  if (high > rules.cap) return `Điểm tối đa là ${rules.cap}.`;
+  if (high < rules.target) return `Chưa đội nào đạt ${rules.target} điểm.`;
+  if (high === low) return 'Hai đội không thể bằng điểm khi kết thúc trận.';
+  if (high === rules.cap) {
+    // Chạm điểm tối đa: thắng dù chỉ hơn 1 điểm, nhưng phải đi qua deuce.
+    return low >= rules.cap - rules.deuceMargin ? null : `${rules.cap} điểm chỉ xảy ra sau deuce, đội thua phải có ${rules.cap - rules.deuceMargin} hoặc ${rules.cap - 1} điểm.`;
+  }
+  if (high === rules.target) {
+    return low < deuce ? null : `${deuce}–${deuce} phải đánh tiếp tới khi cách ${rules.deuceMargin} điểm (ví dụ ${rules.target + 1}–${deuce}).`;
+  }
+  // Trên 21 điểm: chỉ xảy ra sau deuce và phải cách đúng 2 điểm.
+  return high - low === rules.deuceMargin ? null : `Sau deuce phải thắng cách ${rules.deuceMargin} điểm (ví dụ ${high}–${high - rules.deuceMargin}).`;
+}
+
+/** Đội thắng theo tỉ số đã ghi; null khi chưa nhập đủ hoặc tỉ số không đúng luật. */
+export function getMatchWinner(match: ScorePair, rules: ScoreRules = SCORE_RULES): MatchWinner | null {
+  const scores = bothScores(match);
+  if (!scores || validateMatchScore(match, rules) !== null) return null;
+  return scores[0] > scores[1] ? 'A' : 'B';
 }
 
 /** Ghi tỉ số cho một trận. Giá trị không hợp lệ (âm, không phải số) được coi là để trống. */

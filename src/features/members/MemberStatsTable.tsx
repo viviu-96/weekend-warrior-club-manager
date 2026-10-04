@@ -98,7 +98,7 @@ export function MemberStatsTable({ members }: { members: Member[] }) {
                   <div className="rounded-lg bg-slate-50 px-1 py-1.5">
                     <dt className="text-[11px] text-slate-600">Thắng – Thua</dt>
                     <dd className="text-sm font-semibold text-slate-900">
-                      {item && item.matchesScored > 0 ? `${item.wins} – ${item.losses}${item.draws > 0 ? ` (${item.draws} hoà)` : ''}` : '–'}
+                      {item && item.matchesScored > 0 ? `${item.wins} – ${item.losses}` : '–'}
                     </dd>
                   </div>
                 </dl>
@@ -164,7 +164,6 @@ export function MemberStatsTable({ members }: { members: Member[] }) {
                   {item && item.matchesScored > 0 ? (
                     <>
                       <span className="font-semibold text-slate-900">{item.wins}</span> – {item.losses}
-                      {item.draws > 0 && <span className="text-slate-500"> ({item.draws} hoà)</span>}
                     </>
                   ) : (
                     <span className="text-slate-400">–</span>
@@ -195,7 +194,7 @@ export function MemberStatsTable({ members }: { members: Member[] }) {
       </table>
       </div>
       <p className="mt-3 text-xs text-slate-500">
-        Số buổi chỉ tính buổi có tham gia chơi. Thắng – Thua và tỉ lệ thắng chỉ tính các trận đã ghi tỉ số. Tiền gồm cả phần của khách đi cùng; “Đã đóng” gồm cả tiền ứng trước.
+        Số buổi chỉ tính buổi có tham gia chơi. Thắng – Thua và tỉ lệ thắng chỉ tính các trận đã ghi tỉ số đúng luật. Tiền gồm cả phần của khách đi cùng; “Đã đóng” gồm cả tiền ứng trước.
       </p>
     </div>
   );
