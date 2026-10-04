@@ -46,7 +46,8 @@ Một lệnh chạy cả giao diện lẫn API trên cùng một cổng. Biến 
 Trang: https://viviu-96.github.io/weekend-warrior-club-manager/
 
 GitHub Pages không chạy được server, nên bản này lưu dữ liệu trong **localStorage của trình duyệt** thay
-cho `data/*.json`. Dữ liệu nằm riêng trên từng trình duyệt; dùng Cài đặt → Export / Import để sao lưu
+cho `data/*.json`. Lần đầu mở trang, trình duyệt nạp dữ liệu từ thư mục `data/` của nhánh `static-web` tại
+thời điểm deploy; trình duyệt đã có dữ liệu thì giữ nguyên dữ liệu của nó. Dữ liệu nằm riêng trên từng trình duyệt; dùng Cài đặt → Export / Import để sao lưu
 hoặc chuyển sang máy khác.
 
 | Nhánh | Dùng để |

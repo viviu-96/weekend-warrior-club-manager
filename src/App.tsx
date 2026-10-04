@@ -26,7 +26,7 @@ function LoadErrorScreen() {
       )}
       {IS_LOCAL_STORAGE ? (
         <p className="mt-3 text-sm text-slate-600">
-          Dữ liệu được lưu trong trình duyệt này. Nếu có file backup, hãy bấm “Xoá dữ liệu và nạp lại dữ liệu mẫu” rồi vào Cài đặt → Import dữ liệu để
+          Dữ liệu được lưu trong trình duyệt này. Nếu có file backup, hãy bấm “Xoá dữ liệu và nạp lại dữ liệu gốc” rồi vào Cài đặt → Import dữ liệu để
           khôi phục.
         </p>
       ) : (
@@ -44,12 +44,12 @@ function LoadErrorScreen() {
           <Button
             variant="danger"
             onClick={() => {
-              if (!window.confirm('Xoá toàn bộ dữ liệu đang lưu trong trình duyệt này và nạp lại dữ liệu mẫu?')) return;
+              if (!window.confirm('Xoá toàn bộ dữ liệu đang lưu trong trình duyệt này và nạp lại dữ liệu gốc?')) return;
               resetLocalData();
               reload();
             }}
           >
-            Xoá dữ liệu và nạp lại dữ liệu mẫu
+            Xoá dữ liệu và nạp lại dữ liệu gốc
           </Button>
         )}
       </div>

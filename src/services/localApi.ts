@@ -1,6 +1,7 @@
-import seedMembers from '../data/seed/members.json';
-import seedSessions from '../data/seed/sessions.json';
-import seedSettings from '../data/seed/settings.json';
+// Dữ liệu thật trong thư mục data/ được đóng gói vào bản build và nạp cho lần mở trang đầu tiên.
+import seedMembers from '../../data/members.json';
+import seedSessions from '../../data/sessions.json';
+import seedSettings from '../../data/settings.json';
 import type { AppData, Member, Session, Settings } from '../types';
 import type { Api } from './api';
 import { ApiError, DATA_READ_ERROR } from './apiError';
@@ -11,7 +12,7 @@ const KEYS = {
   settings: 'wwcm.data.settings',
 } as const;
 
-// Dữ liệu mẫu được kiểm tra lại bằng parseAppData khi ứng dụng tải, nên ở đây chỉ cần ép kiểu.
+// Dữ liệu ban đầu được kiểm tra lại bằng parseAppData khi ứng dụng tải, nên ở đây chỉ cần ép kiểu.
 const SEEDS = {
   members: seedMembers as unknown as Member[],
   sessions: seedSessions as unknown as Session[],
@@ -27,7 +28,7 @@ function write<T>(key: string, value: T): T {
   return value;
 }
 
-/** Đọc một khoá; chưa có thì khởi tạo từ dữ liệu mẫu. Dữ liệu hỏng không bị ghi đè. */
+/** Đọc một khoá; chưa có thì khởi tạo từ dữ liệu trong data/. Dữ liệu hỏng không bị ghi đè. */
 function read<T>(key: string, seed: T): T {
   let raw: string | null;
   try {
@@ -76,7 +77,7 @@ function remove<T extends { id: string }>(key: string, items: T[], id: string): 
   return null;
 }
 
-/** Xoá toàn bộ dữ liệu trong trình duyệt; lần tải sau sẽ nạp lại dữ liệu mẫu. */
+/** Xoá toàn bộ dữ liệu trong trình duyệt; lần tải sau sẽ nạp lại dữ liệu từ data/. */
 export function resetLocalData(): void {
   for (const key of Object.values(KEYS)) window.localStorage.removeItem(key);
 }
