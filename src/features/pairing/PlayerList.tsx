@@ -73,7 +73,7 @@ export function PlayerList({ session, disabled, onChange }: Props) {
                 )}
               </div>
 
-              <span className="w-20 shrink-0">
+              <span className="shrink-0 sm:w-20">
                 <PlayerTypeBadge type={player.playerType} />
               </span>
 
@@ -84,14 +84,14 @@ export function PlayerList({ session, disabled, onChange }: Props) {
                 </>
               ) : (
                 <>
-                  <span className="w-28 shrink-0 text-sm text-slate-700">{genderLabel(player.gender)}</span>
-                  <span className="w-36 shrink-0">
+                  <span className="shrink-0 text-sm text-slate-700 sm:w-28">{genderLabel(player.gender)}</span>
+                  <span className="shrink-0 sm:w-36">
                     <LevelBadge level={player.level} levels={levels} />
                   </span>
                 </>
               )}
 
-              <div className="ml-auto flex w-32 shrink-0 items-center justify-end gap-1">
+              <div className="ml-auto flex shrink-0 items-center justify-end gap-1 sm:w-32">
                 <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-slate-700 hover:bg-slate-100">
                   <input
                     type="checkbox"

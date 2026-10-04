@@ -1,7 +1,7 @@
 import type { AppData, Level, Session, Settings } from '../types';
 import { formatDate, formatVNDCompact, getDayOfWeek } from '../utils/format';
 import { genderLabel } from './memberService';
-import { getLevelScore, getRoundMatches, getRounds, getWaitingPlayers } from './pairingService';
+import { getLevelScore, getMatchWinner, getRoundMatches, getRounds, getWaitingPlayers } from './pairingService';
 import { calculateSessionPayments, getPaymentEntry } from './paymentService';
 
 type PaymentSettings = Pick<Settings, 'halfPlayCourtMode'>;
@@ -155,6 +155,7 @@ export function generateZaloPairingText(session: Session, options: PairingTextOp
         lines.push('VS');
         lines.push(`${name(match.teamB[0])} + ${name(match.teamB[1])}`);
         if (options.showStrength) lines.push(`(${strength(match.teamA)} VS ${strength(match.teamB)})`);
+        if (getMatchWinner(match) !== null) lines.push(`Tỉ số: ${match.scoreA} – ${match.scoreB}`);
       }
     }
     const waiting = getWaitingPlayers(session.players, session.pairings, round);

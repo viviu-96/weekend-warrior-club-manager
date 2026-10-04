@@ -35,12 +35,14 @@ export function MemberStatsTable({ members }: { members: Member[] }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[680px] text-sm">
+      <table className="w-full min-w-[860px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs font-semibold text-slate-600">
             {header('name', 'Tên', 'left')}
             {header('sessionsPlayed', 'Số buổi')}
             {header('matchesPlayed', 'Số trận')}
+            {header('wins', 'Thắng – Thua')}
+            {header('winRate', 'Tỉ lệ thắng')}
             <th scope="col" className="py-2 pr-2">Partner hay ghép</th>
             {header('totalPaid', 'Đã đóng')}
             {header('outstanding', 'Còn nợ')}
@@ -64,6 +66,17 @@ export function MemberStatsTable({ members }: { members: Member[] }) {
                 </td>
                 <td className="py-2 pr-2 text-right font-semibold">{item?.sessionsPlayed ?? 0}</td>
                 <td className="py-2 pr-2 text-right">{item?.matchesPlayed ?? 0}</td>
+                <td className="py-2 pr-2 text-right whitespace-nowrap">
+                  {item && item.matchesScored > 0 ? (
+                    <>
+                      <span className="font-semibold text-slate-900">{item.wins}</span> – {item.losses}
+                      {item.draws > 0 && <span className="text-slate-500"> ({item.draws} hoà)</span>}
+                    </>
+                  ) : (
+                    <span className="text-slate-400">–</span>
+                  )}
+                </td>
+                <td className="py-2 pr-2 text-right">{item && item.winRate !== null ? <span className="font-semibold text-slate-900">{item.winRate}%</span> : <span className="text-slate-400">–</span>}</td>
                 <td className="py-2 pr-2">
                   {item && item.topPartners.length > 0 ? (
                     <span className="flex flex-wrap gap-1">
@@ -87,7 +100,7 @@ export function MemberStatsTable({ members }: { members: Member[] }) {
         </tbody>
       </table>
       <p className="mt-3 text-xs text-slate-500">
-        Số buổi chỉ tính buổi có tham gia chơi. Tiền chỉ tính phần của riêng thành viên (không gồm khách đi cùng); “Đã đóng” gồm cả tiền ứng trước.
+        Số buổi chỉ tính buổi có tham gia chơi. Thắng – Thua và tỉ lệ thắng chỉ tính các trận đã ghi tỉ số. Tiền gồm cả phần của khách đi cùng; “Đã đóng” gồm cả tiền ứng trước.
       </p>
     </div>
   );

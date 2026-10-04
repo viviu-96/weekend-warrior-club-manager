@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { Match, Member, Session } from '../../types';
 import { generateZaloPairingText } from '../exportService';
 import {
-  buildFundLedger,
   calculateCombinedPayments,
   calculateMemberDebts,
   generateZaloCombinedText,
@@ -210,50 +209,6 @@ describe('công nợ theo thành viên', () => {
     const partial = settleCombinedRow(calculateMemberDebts(locked, SETTINGS).rows[0]!, locked, SETTINGS);
     expect(partial.updated.map((s) => s.id)).toEqual(['sun']);
     expect(partial.skippedLocked).toBe(1);
-  });
-});
-
-describe('quỹ CLB', () => {
-  it('số dư = đầu kỳ + thực thu − thực chi của các buổi + khoản nhập tay', () => {
-    let session = makeSession([makePlayer('a', 'TB'), makePlayer('b', 'TB')], { courtCost: 100000, shuttleCost: 27000 });
-    session = patchPayment(session, 'a', { paidAmount: 64000 });
-    session = patchPayment(session, 'b', { shuttleContribution: 27000 });
-    const settings = {
-      ...SETTINGS,
-      fund: {
-        openingBalance: 200000,
-        transactions: [
-          { id: 't1', date: '2026-09-20', type: 'expense' as const, amount: 150000, note: 'Mua cầu dự trữ' },
-          { id: 't2', date: '2026-09-28', type: 'income' as const, amount: 50000, note: 'Ủng hộ' },
-        ],
-      },
-    };
-    const ledger = buildFundLedger([session], settings);
-    // Chi tiền mặt của buổi = 127.000 − 27.000 cầu đóng góp = 100.000.
-    expect(ledger.entries.map((e) => [e.date, e.amount, e.balance])).toEqual([
-      ['2026-09-20', -150000, 50000],
-      ['2026-09-26', 64000, 114000],
-      ['2026-09-26', -100000, 14000],
-      ['2026-09-28', 50000, 64000],
-    ]);
-    expect(ledger).toMatchObject({ openingBalance: 200000, totalIncome: 114000, totalExpense: 250000, balance: 64000 });
-    // b phải đóng 63.500 − 27.000 = 36.500 nhưng chưa đóng.
-    expect(ledger.receivable).toBe(36500);
-    expect(ledger.entries.filter((e) => e.transactionId).map((e) => e.label)).toEqual(['Mua cầu dự trữ', 'Ủng hộ']);
-  });
-
-  it('thu đủ mọi người thì quỹ tăng đúng bằng phần làm tròn', () => {
-    const players = ['a', 'b', 'c'].map((id) => makePlayer(id, 'TB'));
-    let session = makeSession(players, { courtCost: 100000, shuttleCost: 0 });
-    for (const id of ['a', 'b', 'c']) session = patchPayment(session, id, { paidAmount: 33500 });
-    expect(buildFundLedger([session], SETTINGS).balance).toBe(500);
-  });
-
-  it('đọc quỹ từ settings.json, bỏ qua dòng không hợp lệ', () => {
-    const fund = { openingBalance: 100000, transactions: [{ id: 'x', date: '2026-01-01', type: 'expense', amount: 5000, note: 'ok' }, { id: 'y', date: 'sai', amount: 1 }] };
-    const { data } = parseAppData({ members: [], sessions: [], settings: { ...SETTINGS, fund } });
-    expect(data!.settings.fund).toEqual({ openingBalance: 100000, transactions: [{ id: 'x', date: '2026-01-01', type: 'expense', amount: 5000, note: 'ok' }] });
-    expect(parseAppData({ members: [], sessions: [], settings: { levels: LEVELS } }).data!.settings.fund).toEqual({ openingBalance: 0, transactions: [] });
   });
 });
 

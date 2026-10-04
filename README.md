@@ -221,7 +221,7 @@ Từng buổi chơi cũng xuất được ra JSON và CSV (mở bằng Excel) �
 - **Xếp lại** và **Chỉnh sửa** chỉ tác động lên lượt đang chọn; xoá một lượt thì các lượt sau được đánh số lại.
 - Dữ liệu cũ không có `round` được hiểu là lượt 1.
 
-### Bảng thu gộp, công nợ, quỹ CLB (trang Tính tiền)
+### Bảng thu gộp và công nợ (trang Tính tiền)
 
 - **Bảng thu gộp:** chọn nhiều buổi (mặc định các buổi cùng tuần, ví dụ T7 + CN) để có một bảng mỗi người một
   dòng, mỗi buổi một cặp cột *Tiền sân / Tiền cầu*. Tiền từng buổi vẫn được tính và làm tròn riêng rồi mới
@@ -229,23 +229,20 @@ Từng buổi chơi cũng xuất được ra JSON và CSV (mở bằng Excel) �
   người vãng lai theo tên.
 - **Công nợ:** cùng cách tính trên toàn bộ các buổi, người nợ nhiều nhất xếp trước. Nút *Thu đủ* đánh dấu đã
   đóng đủ ở mọi buổi chưa khoá thu tiền.
-- **Quỹ CLB:** số dư = số dư đầu kỳ + tiền thực thu của các buổi − tiền thực chi của các buổi (sân + cầu −
-  phần cầu được đóng góp bằng hiện vật) + các khoản thu/chi nhập tay. Tiền sân, tiền cầu của buổi đã tự ghi
-  là khoản chi, nên chỉ nhập tay những khoản ngoài buổi chơi. Quỹ được lưu trong `settings.json`:
-
-  ```json
-  "fund": {
-    "openingBalance": 500000,
-    "transactions": [
-      { "id": "fund_x", "date": "2026-09-20", "type": "expense", "amount": 320000, "note": "Mua 2 ống cầu" }
-    ]
-  }
-  ```
 
 ### Thống kê thành viên (trang Thành viên → Thống kê)
 
 Số buổi tham gia (chỉ tính buổi có chơi), số trận, 3 partner ghép nhiều nhất, tổng tiền đã đóng (gồm tiền ứng),
-còn nợ. Tiền chỉ tính phần của riêng thành viên, không gồm khách đi cùng.
+còn nợ, số trận thắng – thua và tỉ lệ thắng. Tiền gồm cả phần của khách đi cùng: khách có người giới thiệu
+được tính vào người giới thiệu, dù buổi đó có bật gộp khách hay không.
+
+### Tỉ số trận đấu
+
+- Mỗi trận có hai ô tỉ số cạnh chữ VS (`scoreA`, `scoreB` trong `sessions.json`). Đội điểm cao hơn là đội
+  thắng và được gắn nhãn 🏆 Thắng; bằng điểm là hoà. Trận chưa nhập đủ hai ô thì chưa có kết quả.
+- Tỉ số nhập được cả khi kết quả xếp cặp đã khoá, vì thường nhập sau khi đánh xong.
+- Xếp lại một lượt đã có tỉ số sẽ xoá tỉ số của lượt đó (ứng dụng hỏi lại trước).
+- Thắng – thua và tỉ lệ thắng ở trang Thành viên chỉ tính các trận đã ghi tỉ số.
 
 ## Thuật toán xếp cặp
 
@@ -303,14 +300,13 @@ Sân: 28.000/người. Cầu: 9 người chịu → suất chuẩn 21.000, nửa
 
 ## Kiểm thử
 
-`npm test` chạy 106 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
+`npm test` chạy 110 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
 giới tính, vãng lai, xếp lại, lịch sử partner, chia sân, làm tròn, tiền sân/cầu, không chơi, nửa buổi,
 ứng trước, đóng góp cầu, gộp 1 và 2 khách, không gộp, còn thiếu, đóng dư, đối soát, nhân bản buổi,
 validation, import lỗi, nội dung Zalo, CSV, JSON, nhiều lượt đấu và xoay vòng người chờ, bảng thu gộp,
-công nợ, quỹ CLB, thống kê thành viên.
+công nợ, thống kê thành viên, tỉ số và thắng/thua.
 
 ## Hướng phát triển
 
-- Ghi kết quả trận đấu (tỉ số) và thống kê thắng/thua.
 - Tự gợi ý điều chỉnh trình độ dựa trên kết quả thi đấu.
 - Đăng nhập admin nếu mở ứng dụng ra ngoài mạng nội bộ.
