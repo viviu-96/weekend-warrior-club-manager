@@ -1,6 +1,22 @@
-import { CheckCheck, FileJson, FileSpreadsheet, Lock, LockOpen, Printer } from 'lucide-react';
+import {
+  CheckCheck,
+  FileJson,
+  FileSpreadsheet,
+  HandCoins,
+  Lock,
+  LockOpen,
+  PiggyBank,
+  Printer,
+  Receipt,
+  Table2,
+  type LucideIcon,
+} from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { CopyButton } from '../components/CopyButton';
-import { Badge, Button, Card, Field, IssueList, MoneyInput, PageHeader, percentOf, ProgressBar, Toggle } from '../components/ui';
+import { Badge, Button, Card, cx, Field, IssueList, MoneyInput, PageHeader, percentOf, ProgressBar, Toggle } from '../components/ui';
+import { CombinedSheet } from '../features/payments/CombinedSheet';
+import { DebtTable } from '../features/payments/DebtTable';
+import { FundLedger } from '../features/payments/FundLedger';
 import { PaymentConfigList } from '../features/payments/PaymentConfigList';
 import { PaymentResultTable } from '../features/payments/PaymentResultTable';
 import { ReconcilePanel } from '../features/payments/ReconcilePanel';
@@ -13,18 +29,54 @@ import { applyPaidToRow, calculateSessionPayments, markAllPaid, type PaymentRow 
 import { validatePayments } from '../services/validationService';
 import { formatSessionDate, formatVND } from '../utils/format';
 
+type PaymentTab = 'session' | 'combined' | 'debts' | 'fund';
+
+const TABS: { id: PaymentTab; label: string; icon: LucideIcon }[] = [
+  { id: 'session', label: 'Buổi chơi', icon: Receipt },
+  { id: 'combined', label: 'Bảng thu gộp', icon: Table2 },
+  { id: 'debts', label: 'Công nợ', icon: HandCoins },
+  { id: 'fund', label: 'Quỹ CLB', icon: PiggyBank },
+];
+
 export function PaymentsPage() {
+  const [params, setParams] = useSearchParams();
+  const tab = TABS.find((item) => item.id === params.get('tab'))?.id ?? 'session';
+
+  return (
+    <>
+      <PageHeader title="💰 Tính tiền" description="Chia tiền từng buổi, gộp nhiều buổi, theo dõi công nợ và quỹ CLB." />
+      <div role="tablist" aria-label="Các phần của trang Tính tiền" className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-slate-200/80 bg-white p-1 shadow-sm print:hidden">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setParams(id === 'session' ? {} : { tab: id }, { replace: true })}
+            className={cx(
+              'inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition',
+              tab === id ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100',
+            )}
+          >
+            <Icon size={16} aria-hidden="true" />
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === 'session' && <SessionPayments />}
+      {tab === 'combined' && <CombinedSheet />}
+      {tab === 'debts' && <DebtTable />}
+      {tab === 'fund' && <FundLedger />}
+    </>
+  );
+}
+
+/** Tính tiền cho một buổi chơi. */
+function SessionPayments() {
   const { activeSession: session, settings, updateSession } = useAppData();
   const { toast, confirm } = useFeedback();
 
-  if (!session) {
-    return (
-      <>
-        <PageHeader title="💰 Tính tiền" description="Chia tiền sân, tiền cầu cho từng người." />
-        <NoSessionState />
-      </>
-    );
-  }
+  if (!session) return <NoSessionState />;
 
   const locked = session.paymentLocked;
   const issues = validatePayments(session);
@@ -59,7 +111,6 @@ export function PaymentsPage() {
 
   return (
     <>
-      <PageHeader title="💰 Tính tiền" description="Chia tiền sân, tiền cầu cho từng người." />
       <SessionPicker />
 
       <div className="space-y-4">

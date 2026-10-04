@@ -11,7 +11,7 @@ import { downloadSessionCSV, downloadSessionJSON } from '../features/sessions/se
 import { useAppData } from '../hooks/useAppData';
 import { useFeedback } from '../hooks/useFeedback';
 import { genderLabel } from '../services/memberService';
-import { calculateBalanceScore } from '../services/pairingService';
+import { calculateBalanceScore, getRoundMatches, getRounds } from '../services/pairingService';
 import { calculateSessionPayments } from '../services/paymentService';
 import { formatSessionDate, formatVND } from '../utils/format';
 
@@ -39,6 +39,7 @@ export function SessionDetailPage() {
 
   const levels = settings.levels;
   const { rows, reconciliation } = calculateSessionPayments(session, settings);
+  const rounds = getRounds(session.pairings);
 
   const open = (path: string) => {
     setActiveSessionId(session.id);
@@ -116,11 +117,35 @@ export function SessionDetailPage() {
           )}
         </Card>
 
-        <Card title={session.pairings.length > 0 ? `Xếp cặp • Balance Score ${calculateBalanceScore(session.pairings, session.players, levels)}/100` : 'Xếp cặp'} collapsible storageKey="detail.pairing">
+        <Card
+          title={
+            rounds.length === 0
+              ? 'Xếp cặp'
+              : rounds.length === 1
+                ? `Xếp cặp • Balance Score ${calculateBalanceScore(session.pairings, session.players, levels)}/100`
+                : `Xếp cặp • ${rounds.length} lượt`
+          }
+          collapsible
+          storageKey="detail.pairing"
+        >
           {session.pairings.length === 0 ? (
             <p className="text-sm text-slate-500">Buổi này chưa xếp cặp.</p>
           ) : (
-            <PairingResultView session={session} levels={levels} showStrength />
+            <div className="space-y-6">
+              {rounds.map((round) => (
+                <div key={round}>
+                  {rounds.length > 1 && (
+                    <p className="mb-2 text-sm font-bold text-slate-900">
+                      Lượt {round}{' '}
+                      <span className="font-normal text-slate-500">
+                        • Balance Score {calculateBalanceScore(getRoundMatches(session.pairings, round), session.players, levels)}/100
+                      </span>
+                    </p>
+                  )}
+                  <PairingResultView session={session} round={round} levels={levels} showStrength />
+                </div>
+              ))}
+            </div>
           )}
         </Card>
 

@@ -234,7 +234,7 @@ describe('các hàm hỗ trợ xếp cặp', () => {
 
   it('balance score cao cho trận cân và thấp cho trận lệch', () => {
     const players = makePlayers(['TBK', 'TBK', 'TB', 'TB']);
-    const balanced: Match = { id: 'm', matchNumber: 1, court: 1, teamA: ['p1', 'p3'], teamB: ['p2', 'p4'] };
+    const balanced: Match = { id: 'm', round: 1, matchNumber: 1, court: 1, teamA: ['p1', 'p3'], teamB: ['p2', 'p4'] };
     const lopsided: Match = { ...balanced, teamA: ['p1', 'p2'], teamB: ['p3', 'p4'] };
     expect(calculateBalanceScore([balanced], players, LEVELS)).toBe(96);
     expect(calculateBalanceScore([lopsided], players, LEVELS)).toBeLessThan(60);
@@ -242,7 +242,7 @@ describe('các hàm hỗ trợ xếp cặp', () => {
   });
 
   it('swapPlayers đổi chỗ hai người, kể cả người chưa được xếp', () => {
-    const match: Match = { id: 'm', matchNumber: 1, court: 1, teamA: ['a', 'b'], teamB: ['c', 'd'] };
+    const match: Match = { id: 'm', round: 1, matchNumber: 1, court: 1, teamA: ['a', 'b'], teamB: ['c', 'd'] };
     expect(swapPlayers([match], 'a', 'c')[0]).toMatchObject({ teamA: ['c', 'b'], teamB: ['a', 'd'] });
     expect(swapPlayers([match], 'b', 'x')[0]).toMatchObject({ teamA: ['a', 'x'], teamB: ['c', 'd'] });
   });

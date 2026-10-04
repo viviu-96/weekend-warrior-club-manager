@@ -1,4 +1,4 @@
-import { ArrowRight, Lock, LockOpen, Pencil, Printer, RefreshCw, Shuffle } from 'lucide-react';
+import { ArrowRight, Lock, LockOpen, Pencil, Plus, Printer, RefreshCw, Shuffle, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CopyButton } from '../components/CopyButton';
@@ -11,12 +11,17 @@ import { useAppData } from '../hooks/useAppData';
 import { useFeedback } from '../hooks/useFeedback';
 import { generateZaloPairingText } from '../services/exportService';
 import {
-  assignCourts,
-  buildPairingHistory,
+  buildRoundHistory,
   calculateBalanceScore,
   generateMatches,
   getEligiblePlayers,
   getPairingSignature,
+  getRoundMatches,
+  getRounds,
+  getWaitCounts,
+  reassignCourts,
+  removeRound,
+  setRoundMatches,
   swapPlayers,
 } from '../services/pairingService';
 import { validateForPairing } from '../services/validationService';
@@ -34,9 +39,11 @@ export function PairingPage() {
   const [editing, setEditing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showStrength, setShowStrength] = useState(true);
-  // Các phương án đã hiển thị cho từng buổi, để "Xếp lại" không lặp lại.
+  // Lượt đang xem; null = lượt mới nhất.
+  const [roundChoice, setRoundChoice] = useState<number | null>(null);
+  // Các phương án đã hiển thị cho từng lượt của từng buổi, để "Xếp lại" không lặp lại.
   const seenSignatures = useRef(new Map<string, string[]>());
-  // Sau khi xếp cặp, cuộn tới kết quả và nháy nhẹ để admin thấy có phương án mới.
+  // Sau khi xếp cặp, cuộn tới kết quả để admin thấy có phương án mới.
   const resultRef = useRef<HTMLDivElement>(null);
   const [generation, setGeneration] = useState(0);
 
@@ -58,43 +65,75 @@ export function PairingPage() {
   const issues = validateForPairing(session, members, levels);
   const errors = issues.filter((issue) => issue.severity === 'error');
   const eligible = getEligiblePlayers(session.players, levels);
-  const hasResult = session.pairings.length > 0;
-  const balanceScore = calculateBalanceScore(session.pairings, session.players, levels);
+  const rounds = getRounds(session.pairings);
+  const hasResult = rounds.length > 0;
+  const lastRound = rounds[rounds.length - 1] ?? 1;
+  const round = roundChoice !== null && rounds.includes(roundChoice) ? roundChoice : lastRound;
+  const roundMatches = getRoundMatches(session.pairings, round);
+  const balanceScore = calculateBalanceScore(roundMatches, session.players, levels);
   const matchCount = Math.floor(eligible.length / 4);
   const leftover = eligible.length - matchCount * 4;
 
   const change = (next: Session) => updateSession(next);
 
-  const generate = (reroll: boolean) => {
+  const stopEditing = () => {
+    setEditing(false);
+    setSelectedId(null);
+  };
+
+  /** Xếp (hoặc xếp lại) một lượt. Các lượt khác được giữ nguyên và dùng để xoay vòng người chờ, tránh lặp partner. */
+  const generate = (targetRound: number, reroll: boolean) => {
     if (errors.length > 0) {
       toast(errors[0]!.message, 'error');
       return;
     }
-    const seen = reroll ? (seenSignatures.current.get(session.id) ?? [getPairingSignature(session.pairings)]) : [];
+    const seenKey = `${session.id}#${targetRound}`;
+    const current = getRoundMatches(session.pairings, targetRound);
+    const seen = reroll ? (seenSignatures.current.get(seenKey) ?? [getPairingSignature(current)]) : [];
     const result = generateMatches(eligible, {
       levels,
       courtCount: session.courtCount,
-      history: buildPairingHistory(sessions.filter((item) => item.id !== session.id)),
+      round: targetRound,
+      history: buildRoundHistory(
+        sessions.filter((item) => item.id !== session.id),
+        session,
+        targetRound,
+      ),
+      waitCounts: getWaitCounts(session.players, session.pairings, targetRound),
       excludeSignatures: seen,
     });
-    seenSignatures.current.set(session.id, result.cycled ? [result.signature] : [...seen, result.signature]);
-    setEditing(false);
-    setSelectedId(null);
-    change({ ...session, pairings: result.matches });
+    seenSignatures.current.set(seenKey, result.cycled ? [result.signature] : [...seen, result.signature]);
+    stopEditing();
+    setRoundChoice(targetRound);
+    change({ ...session, pairings: setRoundMatches(session.pairings, targetRound, result.matches) });
     setGeneration((value) => value + 1);
+    const prefix = rounds.length > 1 || targetRound > 1 ? `Lượt ${targetRound}: ` : '';
     if (result.cycled) toast('Đã xem hết các phương án cân bằng – quay lại từ đầu.', 'info');
-    else toast(`Đã xếp ${result.matches.length} trận • Balance Score ${result.balanceScore}/100`);
+    else toast(`${prefix}đã xếp ${result.matches.length} trận • Balance Score ${result.balanceScore}/100`);
+  };
+
+  const deleteRound = async () => {
+    const ok = await confirm({
+      title: `Xoá lượt ${round}`,
+      message: rounds.length > 1 ? `Xoá kết quả lượt ${round}? Các lượt phía sau sẽ được đánh số lại.` : 'Xoá kết quả xếp cặp của buổi này?',
+      confirmLabel: 'Xoá lượt',
+      danger: true,
+    });
+    if (!ok) return;
+    stopEditing();
+    seenSignatures.current.clear();
+    setRoundChoice(null);
+    change({ ...session, pairings: removeRound(session.pairings, round) });
   };
 
   const pick = (playerId: string) => {
     if (selectedId === null) return setSelectedId(playerId);
-    if (selectedId !== playerId) change({ ...session, pairings: swapPlayers(session.pairings, selectedId, playerId) });
+    if (selectedId !== playerId) change({ ...session, pairings: swapPlayers(session.pairings, selectedId, playerId, round) });
     setSelectedId(null);
   };
 
   const lock = () => {
-    setEditing(false);
-    setSelectedId(null);
+    stopEditing();
     change({ ...session, pairingLocked: true });
     toast('Đã khoá kết quả xếp cặp.');
   };
@@ -144,7 +183,7 @@ export function PairingPage() {
                 disabled={locked}
                 onChange={(event) => {
                   const courtCount = Math.min(20, Math.max(1, Math.floor(Number(event.target.value) || 1)));
-                  change({ ...session, courtCount, pairings: assignCourts(session.pairings, courtCount) });
+                  change({ ...session, courtCount, pairings: reassignCourts(session.pairings, courtCount) });
                 }}
               />
             </Field>
@@ -172,7 +211,13 @@ export function PairingPage() {
 
         {!hasResult && (
           <div className="flex flex-wrap items-center gap-3 print:hidden">
-            <Button variant="primary" icon={<Shuffle size={16} aria-hidden="true" />} onClick={() => generate(false)} disabled={locked || errors.length > 0} className="px-7 py-3 text-base shadow-md shadow-emerald-900/25">
+            <Button
+              variant="primary"
+              icon={<Shuffle size={16} aria-hidden="true" />}
+              onClick={() => generate(1, false)}
+              disabled={locked || errors.length > 0}
+              className="px-7 py-3 text-base shadow-md shadow-emerald-900/25"
+            >
               Xếp cặp
             </Button>
             {eligible.length >= 4 && (
@@ -185,73 +230,128 @@ export function PairingPage() {
 
         {hasResult && (
           <div ref={resultRef} className="scroll-mt-20">
-          <Card
-            key={generation}
-            title={
-              <span className="flex flex-wrap items-center gap-2">
-                Kết quả xếp cặp
-                <Badge tone={balanceTone(balanceScore)}>
-                  <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-10 overflow-hidden rounded-full bg-black/10 align-middle">
-                    <span className={cx('block h-full rounded-full bg-current')} style={{ width: `${balanceScore}%` }} />
-                  </span>
-                  Balance Score: {balanceScore}/100
-                </Badge>
-                {locked && <Badge tone="blue">🔒 Đã khoá</Badge>}
-              </span>
-            }
-            actions={
-              <div className="flex flex-wrap gap-2 print:hidden">
-                <Button size="sm" icon={<RefreshCw size={14} aria-hidden="true" />} onClick={() => generate(true)} disabled={locked}>
-                  Xếp lại
-                </Button>
-                <Button
-                  size="sm"
-                  variant={editing ? 'primary' : 'secondary'}
-                  aria-pressed={editing}
-                  icon={<Pencil size={14} aria-hidden="true" />}
+            <Card
+              key={`${generation}-${round}`}
+              title={
+                <span className="flex flex-wrap items-center gap-2">
+                  Kết quả xếp cặp
+                  <Badge tone={balanceTone(balanceScore)}>
+                    <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-10 overflow-hidden rounded-full bg-black/10 align-middle">
+                      <span className="block h-full rounded-full bg-current" style={{ width: `${balanceScore}%` }} />
+                    </span>
+                    Balance Score: {balanceScore}/100
+                  </Badge>
+                  {locked && <Badge tone="blue">🔒 Đã khoá</Badge>}
+                </span>
+              }
+              actions={
+                <div className="flex flex-wrap gap-2 print:hidden">
+                  <Button size="sm" icon={<RefreshCw size={14} aria-hidden="true" />} onClick={() => generate(round, true)} disabled={locked}>
+                    Xếp lại{rounds.length > 1 && ` lượt ${round}`}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={editing ? 'primary' : 'secondary'}
+                    aria-pressed={editing}
+                    icon={<Pencil size={14} aria-hidden="true" />}
+                    disabled={locked}
+                    onClick={() => {
+                      setEditing(!editing);
+                      setSelectedId(null);
+                    }}
+                  >
+                    {editing ? 'Xong' : 'Chỉnh sửa'}
+                  </Button>
+                  {locked ? (
+                    <Button size="sm" icon={<LockOpen size={14} aria-hidden="true" />} onClick={() => void unlock()}>
+                      Mở khoá
+                    </Button>
+                  ) : (
+                    <Button size="sm" icon={<Lock size={14} aria-hidden="true" />} onClick={lock}>
+                      Khoá kết quả
+                    </Button>
+                  )}
+                  <CopyButton label="Copy kết quả" successMessage="Đã copy kết quả xếp cặp." getText={() => generateZaloPairingText(session, { levels, showStrength: false })} />
+                  <Button size="sm" icon={<Printer size={14} aria-hidden="true" />} onClick={() => window.print()}>
+                    In
+                  </Button>
+                </div>
+              }
+            >
+              {/* Thanh chọn lượt */}
+              <div className="mb-4 flex flex-wrap items-center gap-2 print:hidden" role="tablist" aria-label="Lượt đấu">
+                {rounds.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    role="tab"
+                    aria-selected={item === round}
+                    onClick={() => {
+                      setRoundChoice(item);
+                      stopEditing();
+                    }}
+                    className={cx(
+                      'rounded-full border px-3.5 py-1.5 text-sm font-medium transition active:scale-95',
+                      item === round ? 'border-emerald-700 bg-emerald-700 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
+                    )}
+                  >
+                    Lượt {item}
+                  </button>
+                ))}
+                <button
+                  type="button"
                   disabled={locked}
-                  onClick={() => {
-                    setEditing(!editing);
-                    setSelectedId(null);
-                  }}
+                  onClick={() => generate(lastRound + 1, false)}
+                  title="Xếp thêm một lượt mới: ưu tiên người vừa chờ, tránh lặp lại partner"
+                  className="inline-flex items-center gap-1 rounded-full border border-dashed border-emerald-600 px-3.5 py-1.5 text-sm font-medium text-emerald-800 transition hover:bg-emerald-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {editing ? 'Xong' : 'Chỉnh sửa'}
-                </Button>
-                {locked ? (
-                  <Button size="sm" icon={<LockOpen size={14} aria-hidden="true" />} onClick={() => void unlock()}>
-                    Mở khoá
-                  </Button>
-                ) : (
-                  <Button size="sm" icon={<Lock size={14} aria-hidden="true" />} onClick={lock}>
-                    Khoá kết quả
-                  </Button>
-                )}
-                <CopyButton label="Copy kết quả" successMessage="Đã copy kết quả xếp cặp." getText={() => generateZaloPairingText(session, { levels, showStrength: false })} />
-                <Button size="sm" icon={<Printer size={14} aria-hidden="true" />} onClick={() => window.print()}>
-                  In
-                </Button>
+                  <Plus size={14} aria-hidden="true" /> Thêm lượt
+                </button>
+                <button
+                  type="button"
+                  disabled={locked}
+                  onClick={() => void deleteRound()}
+                  aria-label={`Xoá lượt ${round}`}
+                  title={`Xoá lượt ${round}`}
+                  className="ml-auto rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                </button>
               </div>
-            }
-          >
-            <p className="mb-3 hidden text-base font-bold print:block">
-              🏸 Xếp cặp cầu lông – {formatSessionDate(session.date)} • {session.time}
-            </p>
-            {editing && (
-              <p className="mb-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 print:hidden">
-                ✏️ Bấm vào hai người chơi để đổi chỗ cho nhau.{selectedId && ' Đã chọn 1 người – bấm người thứ hai.'}
-              </p>
-            )}
-            <PairingResultView session={session} levels={levels} showStrength={showStrength} editing={editing && !locked} selectedId={selectedId} onPick={pick} />
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 print:hidden">
-              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" className="h-4 w-4 accent-emerald-700" checked={showStrength} onChange={(event) => setShowStrength(event.target.checked)} />
-                Hiện trình độ và strength
-              </label>
-              <Link to="/tinh-tien" className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-emerald-800">
-                Sang tính tiền <ArrowRight size={16} aria-hidden="true" />
-              </Link>
-            </div>
-          </Card>
+
+              {editing && (
+                <p className="mb-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 print:hidden">
+                  ✏️ Bấm vào hai người chơi để đổi chỗ cho nhau.{selectedId && ' Đã chọn 1 người – bấm người thứ hai.'}
+                </p>
+              )}
+
+              <div className="print:hidden">
+                <PairingResultView session={session} round={round} levels={levels} showStrength={showStrength} editing={editing && !locked} selectedId={selectedId} onPick={pick} />
+              </div>
+
+              {/* Bản in: tất cả các lượt */}
+              <div className="hidden space-y-6 print:block">
+                <p className="text-base font-bold">
+                  🏸 Xếp cặp cầu lông – {formatSessionDate(session.date)} • {session.time}
+                </p>
+                {rounds.map((item) => (
+                  <div key={item}>
+                    {rounds.length > 1 && <p className="mb-2 text-sm font-bold">Lượt {item}</p>}
+                    <PairingResultView session={session} round={item} levels={levels} showStrength={showStrength} />
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 print:hidden">
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" className="h-4 w-4 accent-emerald-700" checked={showStrength} onChange={(event) => setShowStrength(event.target.checked)} />
+                  Hiện trình độ và strength
+                </label>
+                <Link to="/tinh-tien" className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-emerald-800">
+                  Sang tính tiền <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            </Card>
           </div>
         )}
       </div>
