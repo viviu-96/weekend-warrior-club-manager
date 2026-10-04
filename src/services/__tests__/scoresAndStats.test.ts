@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Match, Member } from '../../types';
 import { generateZaloPairingText } from '../exportService';
-import { getMatchWinner, hasScores, setMatchScore } from '../pairingService';
+import { getMatchWinner, hasScores, SCORE_RULES, setMatchScore, validateMatchScore } from '../pairingService';
 import { buildWinLossChart, calculateMemberStats, sortMembersByStats } from '../statsService';
 import { parseAppData } from '../validationService';
 import { LEVELS, makePlayer, makeSession, patchPayment, SETTINGS } from './testHelpers';
@@ -17,16 +17,64 @@ const match = (id: string, teamA: [string, string], teamB: [string, string], sco
   scoreB,
 });
 
-describe('tỉ số trận đấu', () => {
-  it('đội thắng theo tỉ số; chưa đủ tỉ số thì chưa có kết quả', () => {
-    expect(getMatchWinner({ scoreA: 21, scoreB: 15 })).toBe('A');
-    expect(getMatchWinner({ scoreA: 18, scoreB: 21 })).toBe('B');
-    expect(getMatchWinner({ scoreA: 20, scoreB: 20 })).toBe('draw');
-    expect(getMatchWinner({ scoreA: 21, scoreB: null })).toBeNull();
-    expect(getMatchWinner({})).toBeNull();
-    expect(getMatchWinner({ scoreA: 0, scoreB: 0 })).toBe('draw');
+const score = (scoreA: number | null, scoreB: number | null) => ({ scoreA, scoreB });
+
+describe('luật tính điểm: BO1 – 21 điểm – deuce 2 điểm – tối đa 25', () => {
+  it('cấu hình luật', () => {
+    expect(SCORE_RULES).toEqual({ target: 21, deuceMargin: 2, cap: 25 });
   });
 
+  it.each([
+    [21, 0],
+    [21, 15],
+    [21, 19],
+    [22, 20],
+    [23, 21],
+    [24, 22],
+    [25, 23],
+    [25, 24],
+  ])('%i–%i là tỉ số hợp lệ', (high, low) => {
+    expect(validateMatchScore(score(high, low))).toBeNull();
+    expect(validateMatchScore(score(low, high))).toBeNull();
+    expect(getMatchWinner(score(high, low))).toBe('A');
+    expect(getMatchWinner(score(low, high))).toBe('B');
+  });
+
+  it.each([
+    [20, 18, 'Chưa đội nào đạt 21 điểm.'],
+    [15, 15, 'Chưa đội nào đạt 21 điểm.'],
+    [21, 20, '20–20 phải đánh tiếp tới khi cách 2 điểm (ví dụ 22–20).'],
+    [21, 21, 'Hai đội không thể bằng điểm khi kết thúc trận.'],
+    [22, 21, 'Sau deuce phải thắng cách 2 điểm (ví dụ 22–20).'],
+    [22, 15, 'Sau deuce phải thắng cách 2 điểm (ví dụ 22–20).'],
+    [24, 23, 'Sau deuce phải thắng cách 2 điểm (ví dụ 24–22).'],
+    [25, 20, '25 điểm chỉ xảy ra sau deuce, đội thua phải có 23 hoặc 24 điểm.'],
+    [25, 25, 'Hai đội không thể bằng điểm khi kết thúc trận.'],
+    [26, 24, 'Điểm tối đa là 25.'],
+    [30, 28, 'Điểm tối đa là 25.'],
+  ])('%i–%i không hợp lệ', (a, b, message) => {
+    expect(validateMatchScore(score(a, b))).toBe(message);
+    expect(validateMatchScore(score(b, a))).toBe(message);
+    expect(getMatchWinner(score(a, b))).toBeNull();
+  });
+
+  it('chưa nhập đủ hai ô thì chưa báo lỗi và chưa có kết quả', () => {
+    expect(validateMatchScore(score(21, null))).toBeNull();
+    expect(validateMatchScore({})).toBeNull();
+    expect(getMatchWinner(score(21, null))).toBeNull();
+    expect(getMatchWinner({})).toBeNull();
+  });
+
+  it('luật lấy từ cấu hình, không hard-code', () => {
+    const short = { target: 11, deuceMargin: 2, cap: 15 };
+    expect(validateMatchScore(score(11, 7), short)).toBeNull();
+    expect(validateMatchScore(score(15, 14), short)).toBeNull();
+    expect(validateMatchScore(score(21, 15), short)).toBe('Điểm tối đa là 15.');
+    expect(getMatchWinner(score(9, 11), short)).toBe('B');
+  });
+});
+
+describe('ghi tỉ số', () => {
   it('setMatchScore chỉ đổi đúng trận và làm sạch giá trị không hợp lệ', () => {
     const matches = [match('m1', ['a', 'b'], ['c', 'd']), match('m2', ['e', 'f'], ['g', 'h'], 21, 10)];
     const next = setMatchScore(matches, 'm1', 21.7, -3);
@@ -48,65 +96,63 @@ describe('tỉ số trận đấu', () => {
     expect(parseAppData({ members: [], sessions: [noScore], settings: SETTINGS }).data!.sessions[0]!.pairings[0]).toMatchObject({ scoreA: null, scoreB: null });
     expect(generateZaloPairingText(noScore, { levels: LEVELS })).not.toContain('Tỉ số');
   });
+
+  it('tỉ số sai luật không được đưa vào nội dung Zalo', () => {
+    const players = ['a', 'b', 'c', 'd'].map((id) => makePlayer(id, 'TB'));
+    const session = makeSession(players, { pairings: [match('m1', ['a', 'b'], ['c', 'd'], 21, 20)] });
+    expect(generateZaloPairingText(session, { levels: LEVELS })).not.toContain('Tỉ số');
+  });
+});
+
+const MEMBERS: Member[] = ['An', 'Bình', 'Chi', 'Dũng', 'Em'].map((name) => ({ id: `member_${name}`, name, gender: 'male', level: 'TB', note: '' }));
+const PLAYERS = MEMBERS.slice(0, 4).map((m) => makePlayer(m.name, 'TB'));
+const SESSION = makeSession(PLAYERS, {
+  pairings: [
+    match('m1', ['An', 'Bình'], ['Chi', 'Dũng'], 21, 15, 1),
+    match('m2', ['An', 'Chi'], ['Bình', 'Dũng'], 23, 25, 2),
+    match('m3', ['An', 'Dũng'], ['Bình', 'Chi'], 22, 20, 3),
+    match('m4', ['An', 'Bình'], ['Chi', 'Dũng'], null, null, 4), // chưa ghi tỉ số
+    match('m5', ['An', 'Bình'], ['Chi', 'Dũng'], 21, 20, 5), // sai luật -> không tính
+  ],
 });
 
 describe('thống kê thắng / thua', () => {
-  const members: Member[] = ['An', 'Bình', 'Chi', 'Dũng', 'Em'].map((name) => ({ id: `member_${name}`, name, gender: 'male', level: 'TB', note: '' }));
-  const players = members.slice(0, 4).map((m) => makePlayer(m.name, 'TB'));
-  const session = makeSession(players, {
-    pairings: [
-      match('m1', ['An', 'Bình'], ['Chi', 'Dũng'], 21, 15, 1),
-      match('m2', ['An', 'Chi'], ['Bình', 'Dũng'], 19, 21, 2),
-      match('m3', ['An', 'Dũng'], ['Bình', 'Chi'], 20, 20, 3),
-      match('m4', ['An', 'Bình'], ['Chi', 'Dũng'], null, null, 4), // chưa ghi tỉ số
-    ],
-  });
-  const stats = calculateMemberStats(members, [session], SETTINGS);
+  const stats = calculateMemberStats(MEMBERS, [SESSION], SETTINGS);
 
-  it('đếm thắng, thua, hoà và chỉ tính trận đã ghi tỉ số', () => {
-    expect(stats.get('member_An')).toMatchObject({ matchesPlayed: 4, matchesScored: 3, wins: 1, losses: 1, draws: 1, winRate: 33 });
-    expect(stats.get('member_Bình')).toMatchObject({ matchesScored: 3, wins: 2, losses: 0, draws: 1, winRate: 67 });
-    expect(stats.get('member_Dũng')).toMatchObject({ wins: 1, losses: 1, draws: 1 });
-    expect(stats.get('member_Chi')).toMatchObject({ wins: 0, losses: 2, draws: 1, winRate: 0 });
+  it('chỉ tính các trận có tỉ số đúng luật', () => {
+    expect(stats.get('member_An')).toMatchObject({ matchesPlayed: 5, matchesScored: 3, wins: 2, losses: 1, winRate: 67 });
+    expect(stats.get('member_Bình')).toMatchObject({ matchesScored: 3, wins: 2, losses: 1, winRate: 67 });
+    expect(stats.get('member_Dũng')).toMatchObject({ wins: 2, losses: 1, winRate: 67 });
+    expect(stats.get('member_Chi')).toMatchObject({ wins: 0, losses: 3, winRate: 0 });
   });
 
   it('người chưa có trận nào được ghi tỉ số có tỉ lệ thắng trống và xếp sau cùng', () => {
     expect(stats.get('member_Em')).toMatchObject({ matchesScored: 0, winRate: null });
-    expect(sortMembersByStats(members, stats, 'winRate', 'desc').map((m) => m.name)).toEqual(['Bình', 'An', 'Dũng', 'Chi', 'Em']);
-    expect(sortMembersByStats(members, stats, 'wins', 'desc')[0]!.name).toBe('Bình');
+    expect(sortMembersByStats(MEMBERS, stats, 'winRate', 'desc').map((m) => m.name)).toEqual(['An', 'Bình', 'Dũng', 'Chi', 'Em']);
+    expect(sortMembersByStats(MEMBERS, stats, 'wins', 'asc')[0]!.name).toBe('Chi');
   });
 });
 
 describe('dữ liệu biểu đồ thắng / thua', () => {
-  const members: Member[] = ['An', 'Bình', 'Chi', 'Dũng', 'Em'].map((name) => ({ id: `member_${name}`, name, gender: 'male', level: 'TB', note: '' }));
-  const players = members.slice(0, 4).map((m) => makePlayer(m.name, 'TB'));
-  const session = makeSession(players, {
-    pairings: [
-      match('m1', ['An', 'Bình'], ['Chi', 'Dũng'], 21, 15, 1),
-      match('m2', ['An', 'Chi'], ['Bình', 'Dũng'], 19, 21, 2),
-      match('m3', ['An', 'Dũng'], ['Bình', 'Chi'], 20, 20, 3),
-    ],
-  });
-  const chart = buildWinLossChart(members, calculateMemberStats(members, [session], SETTINGS));
+  const chart = buildWinLossChart(MEMBERS, calculateMemberStats(MEMBERS, [SESSION], SETTINGS));
 
   it('chỉ gồm người đã có trận được ghi tỉ số, xếp theo tỉ lệ thắng', () => {
-    expect(chart.rows.map((row) => [row.member.name, row.wins, row.losses, row.draws, row.winRate])).toEqual([
-      ['Bình', 2, 0, 1, 67],
-      ['An', 1, 1, 1, 33],
-      ['Dũng', 1, 1, 1, 33],
-      ['Chi', 0, 2, 1, 0],
+    expect(chart.rows.map((row) => [row.member.name, row.wins, row.losses, row.winRate])).toEqual([
+      ['An', 2, 1, 67],
+      ['Bình', 2, 1, 67],
+      ['Dũng', 2, 1, 67],
+      ['Chi', 0, 3, 0],
     ]);
   });
 
-  it('thang đo chung lấy nửa dài nhất, hoà chia đôi cho hai bên', () => {
-    // Bình: 2 thắng + nửa trận hoà; Chi: 2 thua + nửa trận hoà.
-    expect(chart.max).toBe(2.5);
-    expect(buildWinLossChart(members, calculateMemberStats(members, [], SETTINGS))).toEqual({ rows: [], max: 0 });
+  it('thang đo chung lấy số trận thắng hoặc thua lớn nhất', () => {
+    expect(chart.max).toBe(3);
+    expect(buildWinLossChart(MEMBERS, calculateMemberStats(MEMBERS, [], SETTINGS))).toEqual({ rows: [], max: 0 });
   });
 });
 
 describe('thống kê tiền gồm cả khách đi cùng', () => {
-  const members: Member[] = ['An', 'Bình'].map((name) => ({ id: `member_${name}`, name, gender: 'male', level: 'TB', note: '' }));
+  const members = MEMBERS.slice(0, 2);
   const players = [makePlayer('An', 'TB'), makePlayer('Bình', 'TB'), makePlayer('Khách 1', 'TB', 'male', true), makePlayer('Khách 2', 'TB', 'male', true)];
 
   function build(mergeGuests: boolean) {

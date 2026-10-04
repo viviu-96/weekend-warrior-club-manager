@@ -18,11 +18,10 @@ export interface MemberStats {
   /** Số buổi có tên trong danh sách. */
   sessionsListed: number;
   matchesPlayed: number;
-  /** Số trận đã ghi tỉ số. */
+  /** Số trận đã ghi tỉ số hợp lệ theo luật. */
   matchesScored: number;
   wins: number;
   losses: number;
-  draws: number;
   /** Tỉ lệ thắng trên các trận đã ghi tỉ số (0–100); null khi chưa có trận nào được ghi. */
   winRate: number | null;
   /** Partner ghép nhiều nhất, tối đa 3 người. */
@@ -45,7 +44,6 @@ function emptyStats(memberId: string): MemberStats {
     matchesScored: 0,
     wins: 0,
     losses: 0,
-    draws: 0,
     winRate: null,
     topPartners: [],
     totalPayable: 0,
@@ -101,8 +99,7 @@ export function calculateMemberStats(members: Member[], sessions: Session[], set
           entry.matchesPlayed += 1;
           if (winner !== null) {
             entry.matchesScored += 1;
-            if (winner === 'draw') entry.draws += 1;
-            else if (winner === side) entry.wins += 1;
+            if (winner === side) entry.wins += 1;
             else entry.losses += 1;
           }
           const key = partner.memberId ?? `walkin:${partner.name}`;
@@ -150,14 +147,13 @@ export interface WinLossRow {
   member: Member;
   wins: number;
   losses: number;
-  draws: number;
   matchesScored: number;
   winRate: number;
 }
 
 export interface WinLossChart {
   rows: WinLossRow[];
-  /** Độ dài lớn nhất của một nửa biểu đồ (thắng, hoặc thua, cộng nửa số trận hoà) – dùng làm thang đo chung. */
+  /** Số trận thắng hoặc thua lớn nhất của một người – dùng làm thang đo chung cho hai nửa biểu đồ. */
   max: number;
 }
 
@@ -167,9 +163,9 @@ export function buildWinLossChart(members: Member[], stats: Map<string, MemberSt
     .flatMap<WinLossRow>((member) => {
       const item = stats.get(member.id);
       if (!item || item.matchesScored === 0 || item.winRate === null) return [];
-      return [{ member, wins: item.wins, losses: item.losses, draws: item.draws, matchesScored: item.matchesScored, winRate: item.winRate }];
+      return [{ member, wins: item.wins, losses: item.losses, matchesScored: item.matchesScored, winRate: item.winRate }];
     })
     .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins || a.losses - b.losses || a.member.name.localeCompare(b.member.name, 'vi'));
-  const max = rows.reduce((value, row) => Math.max(value, row.wins + row.draws / 2, row.losses + row.draws / 2), 0);
+  const max = rows.reduce((value, row) => Math.max(value, row.wins, row.losses), 0);
   return { rows, max };
 }
