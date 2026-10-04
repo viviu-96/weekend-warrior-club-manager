@@ -60,7 +60,7 @@ export function DebtTable() {
         {visible.length === 0 ? (
           <p className="py-6 text-center text-sm font-medium text-emerald-800">✓ Không ai còn nợ.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto md:block print:block">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs font-semibold text-slate-600">
@@ -112,6 +112,41 @@ export function DebtTable() {
               </tbody>
             </table>
           </div>
+        )}
+        {visible.length > 0 && (
+          <ul className="space-y-3 md:hidden print:hidden">
+            {visible.map((row) => (
+              <li key={row.key} className="rounded-xl border border-slate-200 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-base font-semibold text-slate-900">{row.name}</span>
+                  {row.overpaid > 0 ? (
+                    <span className="font-semibold text-sky-800">Dư: {formatVND(row.overpaid)}</span>
+                  ) : row.outstanding > 0 ? (
+                    <span className="font-semibold text-red-700">{formatVND(row.outstanding)}</span>
+                  ) : (
+                    <span className="font-semibold text-emerald-800">✓ Đủ</span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm tabular-nums text-slate-600">
+                  {row.sessionCount} buổi • Phải đóng {formatVND(row.roundedPayable)} • Đã thu {formatVND(row.advancePayment + row.paidAmount)}
+                </p>
+                {row.unpaidSessions > 0 && (
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {row.cells
+                      .filter((cell) => cell.row.outstanding > 0)
+                      .map((cell) => (
+                        <Badge key={cell.sessionId} tone="red">
+                          {labelOf.get(cell.sessionId)} • {formatVND(cell.row.outstanding)}
+                        </Badge>
+                      ))}
+                    <Button size="sm" className="ml-auto" icon={<Check size={14} aria-hidden="true" />} onClick={() => void settle(row)}>
+                      Thu đủ
+                    </Button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
         <p className="mt-3 text-xs text-slate-500">
           Khách được gộp vào người giới thiệu theo cài đặt của từng buổi. Phần đóng dư ở buổi này được bù cho phần thiếu ở buổi khác.

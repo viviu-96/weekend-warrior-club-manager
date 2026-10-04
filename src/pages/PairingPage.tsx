@@ -175,7 +175,7 @@ export function PairingPage() {
 
         <Card title="Thông tin buổi chơi" className="print:hidden" collapsible storageKey="pairing.info">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Field label="Ngày" hint={getDayOfWeek(session.date)}>
+            <Field label="Ngày" hint={getDayOfWeek(session.date)} className="col-span-2 md:col-span-1">
               <TextInput
                 type="date"
                 value={session.date}
