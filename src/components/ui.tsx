@@ -337,7 +337,7 @@ export function IssueList({ issues }: { issues: ValidationIssue[] }) {
 
 const AVATAR_TONES = {
   male: 'bg-sky-100 text-sky-900 ring-sky-200',
-  female: 'bg-rose-100 text-rose-900 ring-rose-200',
+  female: 'bg-pink-100 text-pink-700 ring-pink-200',
   unknown: 'bg-slate-100 text-slate-600 ring-slate-200',
 };
 
