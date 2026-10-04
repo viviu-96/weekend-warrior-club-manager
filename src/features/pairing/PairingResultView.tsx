@@ -1,11 +1,13 @@
 import { CircleCheck, Scale } from 'lucide-react';
 import { Avatar, cx } from '../../components/ui';
-import { calculateMatchBalance, getAssignedPlayerIds } from '../../services/pairingService';
+import { calculateMatchBalance, getRoundMatches, getRounds, getWaitingPlayers } from '../../services/pairingService';
 import type { Level, Match, Session, SessionPlayer, TeamIds } from '../../types';
 import { LevelBadge } from '../members/fields';
 
 interface Props {
   session: Session;
+  /** Lượt đấu cần hiển thị. */
+  round: number;
   levels: Level[];
   showStrength: boolean;
   /** Bật chế độ chỉnh sửa: bấm 2 người để đổi chỗ. */
@@ -14,12 +16,13 @@ interface Props {
   onPick?: (playerId: string) => void;
 }
 
-export function PairingResultView({ session, levels, showStrength, editing = false, selectedId = null, onPick }: Props) {
+export function PairingResultView({ session, round, levels, showStrength, editing = false, selectedId = null, onPick }: Props) {
   const byId = new Map(session.players.map((player) => [player.id, player]));
-  const assigned = getAssignedPlayerIds(session.pairings);
-  const waiting = session.players.filter((player) => !assigned.has(player.id) && !player.resting);
+  const matches = getRoundMatches(session.pairings, round);
+  const waiting = getWaitingPlayers(session.players, session.pairings, round);
   const resting = session.players.filter((player) => player.resting);
-  const courts = [...new Set(session.pairings.map((match) => match.court))].sort((a, b) => a - b);
+  const multiRound = getRounds(session.pairings).length > 1;
+  const courts = [...new Set(matches.map((match) => match.court))].sort((a, b) => a - b);
 
   const chip = (player: SessionPlayer | undefined, key: string) => {
     if (!player) return <span key={key} className="text-sm text-red-700">(không tìm thấy)</span>;
@@ -111,13 +114,13 @@ export function PairingResultView({ session, levels, showStrength, editing = fal
             🏸 SÂN {court}
             <span className="h-px flex-1 bg-emerald-200" aria-hidden="true" />
           </h3>
-          <div className="grid gap-3 lg:grid-cols-2">{session.pairings.filter((match) => match.court === court).map(matchCard)}</div>
+          <div className="grid gap-3 lg:grid-cols-2">{matches.filter((match) => match.court === court).map(matchCard)}</div>
         </section>
       ))}
 
       {waiting.length > 0 && (
         <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
-          <p className="font-semibold">⚠ {waiting.length} người chưa được xếp</p>
+          <p className="font-semibold">⚠ {waiting.length} người {multiRound ? `chờ ở lượt ${round}` : 'chưa được xếp'}</p>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">{waiting.map((player) => chip(player, player.id))}</div>
           {editing && <p className="mt-2 text-xs">Bấm một người ở đây rồi bấm một người trong trận để đổi chỗ.</p>}
         </div>

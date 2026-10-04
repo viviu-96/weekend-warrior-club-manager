@@ -1,7 +1,9 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, ChartNoAxesColumn, List, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Avatar, Button, Card, cx, EmptyState, PageHeader, Select, TextInput } from '../components/ui';
 import { LevelBadge } from '../features/members/fields';
+import { MemberStatsTable } from '../features/members/MemberStatsTable';
 import { MemberFormModal } from '../features/members/MemberFormModal';
 import { useAppData } from '../hooks/useAppData';
 import { useFeedback } from '../hooks/useFeedback';
@@ -22,6 +24,9 @@ export function MembersPage() {
   const { toast, confirm } = useFeedback();
   const [filter, setFilter] = useState<MemberFilter>({ query: '', gender: 'all', level: 'all' });
   const [editing, setEditing] = useState<Member | 'new' | null>(null);
+  const [params, setParams] = useSearchParams();
+  const view = params.get('view') === 'stats' ? 'stats' : 'list';
+  const setView = (next: 'list' | 'stats') => setParams(next === 'stats' ? { view: 'stats' } : {}, { replace: true });
   const levels = settings.levels;
 
   const [sort, setSort] = useState<MemberSort>({ key: 'level', direction: 'desc' });
@@ -68,6 +73,29 @@ export function MembersPage() {
       />
 
       <Card>
+        <div role="tablist" aria-label="Kiểu hiển thị" className="mb-3 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+          {(
+            [
+              { id: 'list', label: 'Danh sách', icon: List },
+              { id: 'stats', label: 'Thống kê', icon: ChartNoAxesColumn },
+            ] as const
+          ).map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={view === id}
+              onClick={() => setView(id)}
+              className={cx(
+                'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition',
+                view === id ? 'bg-white text-emerald-900 shadow-sm' : 'text-slate-600 hover:text-slate-900',
+              )}
+            >
+              <Icon size={15} aria-hidden="true" />
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-[1fr_9rem_11rem]">
           <TextInput
             aria-label="Tìm thành viên theo tên"
@@ -96,6 +124,8 @@ export function MembersPage() {
             title={members.length === 0 ? 'Chưa có thành viên' : 'Không có thành viên phù hợp'}
             description={members.length === 0 ? 'Thêm thành viên để dùng tính năng tự điền khi xếp cặp.' : 'Thử đổi từ khoá hoặc bộ lọc.'}
           />
+        ) : view === 'stats' ? (
+          <MemberStatsTable members={visible} />
         ) : (
           <table className="w-full text-sm">
             <thead>

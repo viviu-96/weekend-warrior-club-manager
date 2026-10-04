@@ -1,7 +1,7 @@
 import type { AppData, Level, Session, Settings } from '../types';
 import { formatDate, formatVNDCompact, getDayOfWeek } from '../utils/format';
 import { genderLabel } from './memberService';
-import { getLevelScore } from './pairingService';
+import { getLevelScore, getRoundMatches, getRounds, getWaitingPlayers } from './pairingService';
 import { calculateSessionPayments, getPaymentEntry } from './paymentService';
 
 type PaymentSettings = Pick<Settings, 'halfPlayCourtMode'>;
@@ -141,20 +141,26 @@ export function generateZaloPairingText(session: Session, options: PairingTextOp
     getLevelScore(byId.get(ids[0])?.level, options.levels) + getLevelScore(byId.get(ids[1])?.level, options.levels);
 
   const lines: string[] = ['🏸 XẾP CẶP CẦU LÔNG', sessionDateLine(session)];
-  const courts = [...new Set(session.pairings.map((m) => m.court))].sort((a, b) => a - b);
-  for (const court of courts) {
-    lines.push('', `🏟 SÂN ${court}`);
-    for (const match of session.pairings.filter((m) => m.court === court)) {
-      lines.push('', `Trận ${match.matchNumber}`);
-      lines.push(`${name(match.teamA[0])} + ${name(match.teamA[1])}`);
-      lines.push('VS');
-      lines.push(`${name(match.teamB[0])} + ${name(match.teamB[1])}`);
-      if (options.showStrength) lines.push(`(${strength(match.teamA)} VS ${strength(match.teamB)})`);
+  const rounds = getRounds(session.pairings);
+  for (const round of rounds) {
+    const matches = getRoundMatches(session.pairings, round);
+    // Chỉ ghi tiêu đề lượt khi buổi có nhiều lượt.
+    if (rounds.length > 1) lines.push('', `🔁 LƯỢT ${round}`);
+    const courts = [...new Set(matches.map((m) => m.court))].sort((a, b) => a - b);
+    for (const court of courts) {
+      lines.push('', `🏟 SÂN ${court}`);
+      for (const match of matches.filter((m) => m.court === court)) {
+        lines.push('', `Trận ${match.matchNumber}`);
+        lines.push(`${name(match.teamA[0])} + ${name(match.teamA[1])}`);
+        lines.push('VS');
+        lines.push(`${name(match.teamB[0])} + ${name(match.teamB[1])}`);
+        if (options.showStrength) lines.push(`(${strength(match.teamA)} VS ${strength(match.teamB)})`);
+      }
+    }
+    const waiting = getWaitingPlayers(session.players, session.pairings, round);
+    if (waiting.length > 0) {
+      lines.push('', `⚠ ${rounds.length > 1 ? 'Chờ lượt này' : 'Chưa được xếp'}: ${waiting.map((p) => p.name).join(', ')}`);
     }
   }
-
-  const assigned = new Set(session.pairings.flatMap((m) => [...m.teamA, ...m.teamB]));
-  const waiting = session.players.filter((p) => !assigned.has(p.id) && !p.resting);
-  if (waiting.length > 0) lines.push('', `⚠ Chưa được xếp: ${waiting.map((p) => p.name).join(', ')}`);
   return lines.join('\n');
 }

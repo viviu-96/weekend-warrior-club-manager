@@ -185,6 +185,42 @@ Từng buổi chơi cũng xuất được ra JSON và CSV (mở bằng Excel) �
 - **Đối soát**: tổng chi, tổng phải thu, đã thu, còn thiếu, chênh lệch và *rounding adjustment* (chỉ hiện
   trong ứng dụng, không đưa vào nội dung Zalo).
 
+### Nhiều lượt đấu trong một buổi
+
+- Mỗi trận có `round` (lượt 1, 2, 3...). Bấm **Thêm lượt** để xếp thêm một lượt cho cùng danh sách người chơi;
+  mỗi người vẫn chỉ xuất hiện một lần trong một lượt.
+- **Xoay vòng người chờ:** ai đã chờ ở lượt trước thì lượt sau được ưu tiên vào sân (phạt 500 điểm cho mỗi lần
+  đã chờ, lớn hơn mọi lợi ích cân bằng). Ví dụ 6 người, 3 lượt: mỗi người chờ đúng một lần.
+- Partner và đối thủ của các lượt trước trong cùng buổi bị tránh lặp lại, nặng gấp 3 so với lịch sử buổi trước.
+- **Xếp lại** và **Chỉnh sửa** chỉ tác động lên lượt đang chọn; xoá một lượt thì các lượt sau được đánh số lại.
+- Dữ liệu cũ không có `round` được hiểu là lượt 1.
+
+### Bảng thu gộp, công nợ, quỹ CLB (trang Tính tiền)
+
+- **Bảng thu gộp:** chọn nhiều buổi (mặc định các buổi cùng tuần, ví dụ T7 + CN) để có một bảng mỗi người một
+  dòng, mỗi buổi một cặp cột *Tiền sân / Tiền cầu*. Tiền từng buổi vẫn được tính và làm tròn riêng rồi mới
+  cộng; phần dư ở buổi này bù cho phần thiếu ở buổi khác. Người được nhận diện xuyên buổi theo `memberId`,
+  người vãng lai theo tên.
+- **Công nợ:** cùng cách tính trên toàn bộ các buổi, người nợ nhiều nhất xếp trước. Nút *Thu đủ* đánh dấu đã
+  đóng đủ ở mọi buổi chưa khoá thu tiền.
+- **Quỹ CLB:** số dư = số dư đầu kỳ + tiền thực thu của các buổi − tiền thực chi của các buổi (sân + cầu −
+  phần cầu được đóng góp bằng hiện vật) + các khoản thu/chi nhập tay. Tiền sân, tiền cầu của buổi đã tự ghi
+  là khoản chi, nên chỉ nhập tay những khoản ngoài buổi chơi. Quỹ được lưu trong `settings.json`:
+
+  ```json
+  "fund": {
+    "openingBalance": 500000,
+    "transactions": [
+      { "id": "fund_x", "date": "2026-09-20", "type": "expense", "amount": 320000, "note": "Mua 2 ống cầu" }
+    ]
+  }
+  ```
+
+### Thống kê thành viên (trang Thành viên → Thống kê)
+
+Số buổi tham gia (chỉ tính buổi có chơi), số trận, 3 partner ghép nhiều nhất, tổng tiền đã đóng (gồm tiền ứng),
+còn nợ. Tiền chỉ tính phần của riêng thành viên, không gồm khách đi cùng.
+
 ## Thuật toán xếp cặp
 
 Cài đặt trong `src/services/pairingService.ts`, không random đơn thuần.
@@ -241,14 +277,14 @@ Sân: 28.000/người. Cầu: 9 người chịu → suất chuẩn 21.000, nửa
 
 ## Kiểm thử
 
-`npm test` chạy 82 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
+`npm test` chạy 106 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
 giới tính, vãng lai, xếp lại, lịch sử partner, chia sân, làm tròn, tiền sân/cầu, không chơi, nửa buổi,
 ứng trước, đóng góp cầu, gộp 1 và 2 khách, không gộp, còn thiếu, đóng dư, đối soát, nhân bản buổi,
-validation, import lỗi, nội dung Zalo, CSV, JSON.
+validation, import lỗi, nội dung Zalo, CSV, JSON, nhiều lượt đấu và xoay vòng người chờ, bảng thu gộp,
+công nợ, quỹ CLB, thống kê thành viên.
 
 ## Hướng phát triển
 
-- Nhiều lượt đấu (round) trong một buổi, xoay vòng người chờ.
-- Quản lý nhiều buổi trong một bảng thu (cột T7/CN), quỹ CLB, công nợ theo thành viên.
-- Thống kê theo thành viên: số buổi tham gia, partner hay ghép, tổng tiền đã đóng.
+- Ghi kết quả trận đấu (tỉ số) và thống kê thắng/thua.
+- Tự gợi ý điều chỉnh trình độ dựa trên kết quả thi đấu.
 - Đăng nhập admin nếu mở ứng dụng ra ngoài mạng nội bộ.

@@ -1,6 +1,8 @@
 import { DEFAULT_SETTINGS } from '../data/defaultSettings';
 import type {
   AppData,
+  ClubFund,
+  FundTransaction,
   Gender,
   Level,
   Match,
@@ -133,6 +135,22 @@ const asNumber = (value: unknown, fallback = 0): number =>
 const asBoolean = (value: unknown, fallback: boolean): boolean => (typeof value === 'boolean' ? value : fallback);
 const asGender = (value: unknown): Gender | null => (value === 'male' || value === 'female' ? value : null);
 
+function parseFund(raw: unknown): ClubFund {
+  if (!isRecord(raw)) return { openingBalance: 0, transactions: [] };
+  const transactions: FundTransaction[] = [];
+  if (Array.isArray(raw.transactions)) {
+    for (const item of raw.transactions) {
+      if (!isRecord(item)) continue;
+      const id = asString(item.id);
+      const date = asString(item.date);
+      const amount = Math.round(asNumber(item.amount));
+      if (!id || !parseISODate(date) || amount <= 0 || transactions.some((entry) => entry.id === id)) continue;
+      transactions.push({ id, date, type: item.type === 'expense' ? 'expense' : 'income', amount, note: asString(item.note) });
+    }
+  }
+  return { openingBalance: Math.round(asNumber(raw.openingBalance)), transactions };
+}
+
 function parseSettings(raw: unknown, errors: string[]): Settings {
   if (!isRecord(raw)) {
     errors.push('Cài đặt (settings) không hợp lệ.');
@@ -154,6 +172,7 @@ function parseSettings(raw: unknown, errors: string[]): Settings {
     defaultCourtCount: Math.max(1, Math.floor(asNumber(raw.defaultCourtCount, DEFAULT_SETTINGS.defaultCourtCount))),
     defaultTime: asString(raw.defaultTime, DEFAULT_SETTINGS.defaultTime),
     mergeGuestsByDefault: asBoolean(raw.mergeGuestsByDefault, DEFAULT_SETTINGS.mergeGuestsByDefault),
+    fund: parseFund(raw.fund),
   };
 }
 
@@ -211,6 +230,7 @@ function parsePairings(raw: unknown, playerIds: Set<string>): Match[] {
   const used = new Set<string>();
   for (const item of raw) {
     if (!isRecord(item)) continue;
+    const round = Math.max(1, Math.floor(asNumber(item.round, 1)));
     const teams = [item.teamA, item.teamB].map((team) =>
       Array.isArray(team) && team.length === 2 && team.every((id) => typeof id === 'string' && playerIds.has(id))
         ? (team as [string, string])
@@ -220,10 +240,11 @@ function parsePairings(raw: unknown, playerIds: Set<string>): Match[] {
     if (!teamA || !teamB) continue;
     const all = [...teamA, ...teamB];
     // Mỗi người chỉ xuất hiện một lần trong một lượt.
-    if (new Set(all).size !== 4 || all.some((id) => used.has(id))) continue;
-    all.forEach((id) => used.add(id));
+if (new Set(all).size !== 4 || all.some((id) => used.has(`${round}:${id}`))) continue;
+    all.forEach((id) => used.add(`${round}:${id}`));
     matches.push({
-      id: asString(item.id, `match_${matches.length + 1}`),
+      id: asString(item.id, `r${round}_match_${matches.length + 1}`),
+      round,
       matchNumber: Math.max(1, Math.floor(asNumber(item.matchNumber, matches.length + 1))),
       court: Math.max(1, Math.floor(asNumber(item.court, 1))),
       teamA,

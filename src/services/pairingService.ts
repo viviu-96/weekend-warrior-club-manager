@@ -92,6 +92,8 @@ export interface PairingWeights {
   sameGenderTeam: number;
   partnerRepeat: number;
   opponentRepeat: number;
+  /** Cho ngồi chờ một người đã từng chờ ở lượt trước (mỗi lần đã chờ). */
+  benchRepeat: number;
 }
 
 // Thứ tự ưu tiên: cân bằng trình độ >> partner phù hợp > giới tính, lịch sử.
@@ -104,6 +106,8 @@ export const DEFAULT_PAIRING_WEIGHTS: PairingWeights = {
   sameGenderTeam: 0.5,
   partnerRepeat: 4,
   opponentRepeat: 1.5,
+  // Lớn hơn mọi lợi ích cân bằng: ai đã chờ thì lượt sau phải được chơi nếu còn người chưa chờ.
+  benchRepeat: 500,
 };
 
 const MAX_HISTORY_COUNT = 3;
@@ -114,6 +118,8 @@ interface SearchContext {
   mixedPossible: boolean;
   partner: number[][];
   opponent: number[][];
+  /** Chi phí nếu cho người này ngồi chờ ở lượt đang xếp. */
+  benchPenalty: number[];
   weights: PairingWeights;
 }
 
@@ -251,8 +257,9 @@ function exhaustiveSearch(ctx: SearchContext, ids: string[], playing: number): C
   const n = ids.length;
   const top: { cost: number; slots: number[] }[] = [];
   let worst = Infinity;
+  let benchCost = 0;
   const consider = (slots: number[]) => {
-    const cost = arrangementCost(ctx, slots, playing);
+    const cost = arrangementCost(ctx, slots, playing) + benchCost;
     if (top.length >= TOP_CANDIDATES && cost >= worst) return;
     top.push({ cost, slots: slots.slice(0, playing) });
     top.sort((a, b) => a.cost - b.cost);
@@ -261,6 +268,7 @@ function exhaustiveSearch(ctx: SearchContext, ids: string[], playing: number): C
   };
   forEachCombination(n, n - playing, (bench) => {
     const benched = new Set(bench);
+    benchCost = bench.reduce((sum, i) => sum + ctx.benchPenalty[i]!, 0);
     const items: number[] = [];
     for (let i = 0; i < n; i += 1) if (!benched.has(i)) items.push(i);
     forEachArrangement(items, consider);
@@ -279,10 +287,15 @@ function shuffle(items: number[], rng: () => number): void {
 function localSearch(ctx: SearchContext, ids: string[], playing: number, rng: () => number): Candidate[] {
   const n = ids.length;
   const found = new Map<string, Candidate>();
+  const totalCost = (order: number[]) => {
+    let cost = arrangementCost(ctx, order, playing);
+    for (let i = playing; i < n; i += 1) cost += ctx.benchPenalty[order[i]!]!;
+    return cost;
+  };
   for (let restart = 0; restart < LOCAL_SEARCH_RESTARTS; restart += 1) {
     const order = Array.from({ length: n }, (_, i) => i);
     shuffle(order, rng);
-    let current = arrangementCost(ctx, order, playing);
+    let current = totalCost(order);
     for (;;) {
       let bestCost = current;
       let bestI = -1;
@@ -292,7 +305,7 @@ function localSearch(ctx: SearchContext, ids: string[], playing: number, rng: ()
           // Đổi chỗ trong cùng một team không tạo ra phương án mới.
           if (j < playing && Math.floor(i / 2) === Math.floor(j / 2)) continue;
           [order[i], order[j]] = [order[j]!, order[i]!];
-          const cost = arrangementCost(ctx, order, playing);
+          const cost = totalCost(order);
           [order[i], order[j]] = [order[j]!, order[i]!];
           if (cost < bestCost - 1e-9) {
             bestCost = cost;
@@ -346,6 +359,10 @@ export interface GenerateOptions {
   levels: Level[];
   courtCount: number;
   history?: PairingHistory;
+  /** Lượt đấu đang xếp (mặc định 1). */
+  round?: number;
+  /** Số lần mỗi người (theo player id) đã ngồi chờ ở các lượt khác – để xoay vòng người chờ. */
+  waitCounts?: Record<string, number>;
   /** Chữ ký các phương án đã hiển thị, để "Xếp lại" không lặp lại. */
   excludeSignatures?: string[];
   rng?: () => number;
@@ -412,13 +429,16 @@ export function generateMatches(players: SessionPlayer[], options: GenerateOptio
   const female = players.map((p) => (p.gender === 'female' ? 1 : 0));
   const femaleCount = female.reduce<number>((sum, value) => sum + value, 0);
 
+  const weights = { ...DEFAULT_PAIRING_WEIGHTS, ...options.weights };
+  const round = options.round ?? 1;
   const ctx: SearchContext = {
+    benchPenalty: players.map((p) => weights.benchRepeat * (options.waitCounts?.[p.id] ?? 0)),
     scores: players.map((p) => getLevelScore(p.level, levels)),
     female,
     mixedPossible: femaleCount > 0 && femaleCount < n,
     partner: historyMatrix(history?.partners),
     opponent: historyMatrix(history?.opponents),
-    weights: { ...DEFAULT_PAIRING_WEIGHTS, ...options.weights },
+    weights,
   };
 
   const searchSize = combinationCount(n, n - playing) * arrangementCount(playing);
@@ -441,7 +461,8 @@ export function generateMatches(players: SessionPlayer[], options: GenerateOptio
     return [ids[first]!, ids[second]!];
   };
   const rawMatches: Match[] = groups.map((group, index) => ({
-    id: `match_${index + 1}`,
+    id: `r${round}_match_${index + 1}`,
+    round,
     matchNumber: index + 1,
     court: 1,
     teamA: team(group[0]!, group[1]!),
@@ -501,15 +522,81 @@ export function calculateBalanceScore(matches: Match[], players: SessionPlayer[]
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
-/** Đổi chỗ hai người chơi (kể cả với người chưa được xếp). */
-export function swapPlayers(matches: Match[], playerA: string, playerB: string): Match[] {
+/** Đổi chỗ hai người chơi (kể cả với người chưa được xếp). Truyền `round` để chỉ đổi trong một lượt. */
+export function swapPlayers(matches: Match[], playerA: string, playerB: string, round?: number): Match[] {
   if (playerA === playerB) return matches;
   const swap = (id: string) => (id === playerA ? playerB : id === playerB ? playerA : id);
-  return matches.map((match) => ({
-    ...match,
-    teamA: [swap(match.teamA[0]), swap(match.teamA[1])],
-    teamB: [swap(match.teamB[0]), swap(match.teamB[1])],
-  }));
+  return matches.map((match) =>
+    round !== undefined && match.round !== round
+      ? match
+      : { ...match, teamA: [swap(match.teamA[0]), swap(match.teamA[1])], teamB: [swap(match.teamB[0]), swap(match.teamB[1])] },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Nhiều lượt đấu trong một buổi
+// ---------------------------------------------------------------------------
+
+/** Danh sách số lượt đang có, tăng dần. */
+export function getRounds(matches: Match[]): number[] {
+  return [...new Set(matches.map((match) => match.round))].sort((a, b) => a - b);
+}
+
+export function getRoundMatches(matches: Match[], round: number): Match[] {
+  return matches.filter((match) => match.round === round);
+}
+
+/** Thay toàn bộ trận của một lượt, giữ nguyên các lượt khác và thứ tự lượt. */
+export function setRoundMatches(matches: Match[], round: number, roundMatches: Match[]): Match[] {
+  return [...matches.filter((match) => match.round !== round), ...roundMatches].sort(
+    (a, b) => a.round - b.round || a.matchNumber - b.matchNumber,
+  );
+}
+
+/** Xoá một lượt và đánh số lại các lượt phía sau. */
+export function removeRound(matches: Match[], round: number): Match[] {
+  return matches
+    .filter((match) => match.round !== round)
+    .map((match) =>
+      match.round > round ? { ...match, round: match.round - 1, id: `r${match.round - 1}_match_${match.matchNumber}` } : match,
+    );
+}
+
+/** Chia lại sân cho từng lượt khi số sân thay đổi. */
+export function reassignCourts(matches: Match[], courtCount: number): Match[] {
+  return getRounds(matches).flatMap((round) => assignCourts(getRoundMatches(matches, round), courtCount));
+}
+
+/** Người sẵn sàng chơi nhưng không có trận trong một lượt. */
+export function getWaitingPlayers(players: SessionPlayer[], matches: Match[], round: number): SessionPlayer[] {
+  const assigned = getAssignedPlayerIds(getRoundMatches(matches, round));
+  return players.filter((player) => !player.resting && !assigned.has(player.id));
+}
+
+/** Số lần mỗi người đã ngồi chờ ở các lượt khác `excludeRound`. */
+export function getWaitCounts(players: SessionPlayer[], matches: Match[], excludeRound?: number): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const round of getRounds(matches)) {
+    if (round === excludeRound) continue;
+    for (const player of getWaitingPlayers(players, matches, round)) counts[player.id] = (counts[player.id] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/** Số lượt mỗi người đã được chơi trong buổi. */
+export function getPlayCounts(matches: Match[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const match of matches) for (const id of [...match.teamA, ...match.teamB]) counts[id] = (counts[id] ?? 0) + 1;
+  return counts;
+}
+
+/**
+ * Lịch sử partner / đối thủ dùng khi xếp một lượt: các buổi trước + các lượt khác của chính buổi này.
+ * Trùng cặp ngay trong buổi được tính nặng gấp 3 so với trùng ở buổi trước.
+ */
+export function buildRoundHistory(otherSessions: Session[], session: Session, excludeRound: number): PairingHistory {
+  const sameSession = { ...session, pairings: session.pairings.filter((match) => match.round !== excludeRound) };
+  return buildPairingHistory([...otherSessions, sameSession, sameSession, sameSession]);
 }
 
 /** Chữ ký của một kết quả xếp cặp, không phụ thuộc thứ tự trận / team / người. */

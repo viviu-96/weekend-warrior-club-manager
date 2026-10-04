@@ -218,7 +218,7 @@ describe('export', () => {
   it('nội dung Zalo xếp cặp', () => {
     const paired = {
       ...session,
-      pairings: [{ id: 'm1', matchNumber: 1, court: 1, teamA: ['Phi', 'Hạnh'] as [string, string], teamB: ['Luân', 'Bạn Phi'] as [string, string] }],
+      pairings: [{ id: 'm1', round: 1, matchNumber: 1, court: 1, teamA: ['Phi', 'Hạnh'] as [string, string], teamB: ['Luân', 'Bạn Phi'] as [string, string] }],
     };
     expect(generateZaloPairingText(paired, { levels: LEVELS })).toBe(
       ['🏸 XẾP CẶP CẦU LÔNG', '📅 Thứ 7 – 26/09/2026', '', '🏟 SÂN 1', '', 'Trận 1', 'Phi + Hạnh', 'VS', 'Luân + Bạn Phi'].join('\n'),

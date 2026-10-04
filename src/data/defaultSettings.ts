@@ -9,4 +9,5 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultCourtCount: seedSettings.defaultCourtCount,
   defaultTime: seedSettings.defaultTime,
   mergeGuestsByDefault: seedSettings.mergeGuestsByDefault,
+  fund: { openingBalance: 0, transactions: [] },
 };
