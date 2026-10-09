@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { CopyButton } from '../components/CopyButton';
-import { Badge, Button, Card, cx, Field, IssueList, MoneyInput, PageHeader, percentOf, ProgressBar, Toggle } from '../components/ui';
+import { Badge, Button, Card, cx, Field, IssueList, MoneyInput, PageHeader, percentOf, ProgressBar, TextInput, Toggle } from '../components/ui';
 import { CombinedSheet } from '../features/payments/CombinedSheet';
 import { DebtTable } from '../features/payments/DebtTable';
 import { PaymentConfigList } from '../features/payments/PaymentConfigList';
@@ -23,7 +23,8 @@ import { NoSessionState, SessionPicker } from '../features/sessions/SessionPicke
 import { useAppData } from '../hooks/useAppData';
 import { useFeedback } from '../hooks/useFeedback';
 import { generateZaloPaymentText } from '../services/exportService';
-import { applyPaidToRow, calculateSessionPayments, markAllPaid, type PaymentRow } from '../services/paymentService';
+import { applyPaidToRow, calculateSessionPayments, calculateShuttleUnitPrice, markAllPaid, type PaymentRow } from '../services/paymentService';
+import { setManualShuttleCost, updateShuttleUsage } from '../services/sessionService';
 import { validatePayments } from '../services/validationService';
 import { formatSessionDate, formatVND } from '../utils/format';
 
@@ -105,6 +106,11 @@ function SessionPayments() {
 
   const paidRows = rows.filter((row) => row.outstanding === 0).length;
 
+  const perBox = settings.shuttlesPerBox;
+  const unitPrice = calculateShuttleUnitPrice(session.shuttleBoxPrice ?? 0, perBox);
+  // Tiền cầu đang được tự tính khi đã có cả giá hộp lẫn số quả.
+  const autoShuttle = session.shuttleCount !== null && unitPrice > 0;
+
   return (
     <>
       <SessionPicker />
@@ -121,19 +127,53 @@ function SessionPayments() {
 
         <Card title="Chi phí buổi chơi" className="print:hidden" collapsible storageKey="payments.costs">
           <div className="grid grid-cols-2 items-start gap-3 md:grid-cols-4">
-            <Field label="Tiền sân">
+            <Field label="Tiền sân" className="col-span-2 md:col-span-1">
               <MoneyInput label="Tiền sân" disabled={locked} value={session.courtCost} onChange={(courtCost) => updateSession({ ...session, courtCost })} />
             </Field>
-            <Field label="Tiền cầu" hint="Gồm cả cầu do thành viên đóng góp">
-              <MoneyInput label="Tiền cầu" disabled={locked} value={session.shuttleCost} onChange={(shuttleCost) => updateSession({ ...session, shuttleCost })} />
+            <Field label={`Giá 1 hộp cầu (${perBox} quả)`} hint={unitPrice > 0 ? `${formatVND(unitPrice)} / quả` : 'Nhập giá hộp để tự tính tiền cầu'}>
+              <MoneyInput
+                label="Giá một hộp cầu"
+                disabled={locked}
+                value={session.shuttleBoxPrice ?? 0}
+                onChange={(price) => updateSession(updateShuttleUsage(session, { shuttleBoxPrice: price > 0 ? price : null }, perBox))}
+              />
             </Field>
-            <div className="col-span-2 rounded-lg bg-slate-50 px-3 py-2 md:col-span-1 md:mt-4">
+            <Field label="Số quả cầu đã dùng" hint={session.shuttleCount === null ? 'Để trống nếu nhập tay tiền cầu' : undefined}>
+              <TextInput
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={999}
+                placeholder="0"
+                disabled={locked}
+                value={session.shuttleCount ?? ''}
+                onChange={(event) => {
+                  const raw = event.target.value;
+                  const count = raw === '' ? null : Math.min(999, Math.max(0, Math.floor(Number(raw) || 0)));
+                  updateSession(updateShuttleUsage(session, { shuttleCount: count }, perBox));
+                }}
+              />
+            </Field>
+            <Field
+              label="Tiền cầu"
+              className="col-span-2 md:col-span-1"
+              hint={
+                autoShuttle
+                  ? `Tự tính: ${session.shuttleCount} quả × ${formatVND(unitPrice)}`
+                  : session.shuttleCount !== null
+                    ? 'Chưa có giá hộp cầu nên chưa tự tính được'
+                    : 'Đang nhập tay • gồm cả cầu do thành viên đóng góp'
+              }
+            >
+              <MoneyInput label="Tiền cầu" disabled={locked} value={session.shuttleCost} onChange={(shuttleCost) => updateSession(setManualShuttleCost(session, shuttleCost))} />
+            </Field>
+          </div>
+          <div className="mt-3 grid grid-cols-1 items-center gap-3 sm:grid-cols-2">
+            <div className="rounded-lg bg-slate-50 px-3 py-2">
               <p className="text-xs font-medium text-slate-600">Tổng chi</p>
               <p className="text-lg font-bold tabular-nums text-slate-900">{formatVND(reconciliation.totalCost)}</p>
             </div>
-            <div className="col-span-2 md:col-span-1 md:pt-6">
-              <Toggle label="Gộp khách vào người giới thiệu" disabled={locked} checked={session.mergeGuests} onChange={(mergeGuests) => updateSession({ ...session, mergeGuests })} />
-            </div>
+            <Toggle label="Gộp khách vào người giới thiệu" disabled={locked} checked={session.mergeGuests} onChange={(mergeGuests) => updateSession({ ...session, mergeGuests })} />
           </div>
         </Card>
 

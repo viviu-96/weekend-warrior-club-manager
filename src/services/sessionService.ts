@@ -4,9 +4,35 @@ import { createId } from '../utils/id';
 import { cleanName } from '../utils/text';
 import { api } from './api';
 import { getAssignedPlayerIds } from './pairingService';
-import { createDefaultPayment } from './paymentService';
+import { calculateShuttleCost, createDefaultPayment } from './paymentService';
 
-type SessionDefaults = Pick<Settings, 'defaultCourtCount' | 'defaultTime' | 'mergeGuestsByDefault'>;
+type SessionDefaults = Pick<Settings, 'defaultCourtCount' | 'defaultTime' | 'mergeGuestsByDefault' | 'shuttleBoxPrice'>;
+
+/** Giá hộp cầu cho buổi mới: lấy từ Cài đặt, nếu chưa đặt thì lấy của buổi gần nhất có giá. */
+export function getDefaultShuttleBoxPrice(settings: Pick<Settings, 'shuttleBoxPrice'>, existing: Session[]): number | null {
+  if (settings.shuttleBoxPrice > 0) return settings.shuttleBoxPrice;
+  const latest = sortSessionsByDate(existing).find((session) => (session.shuttleBoxPrice ?? 0) > 0);
+  return latest?.shuttleBoxPrice ?? null;
+}
+
+/**
+ * Cập nhật giá hộp cầu / số quả đã dùng và tự tính lại tiền cầu.
+ * Khi đã có số quả nhưng chưa có giá hộp thì giữ nguyên tiền cầu đang có.
+ */
+export function updateShuttleUsage(
+  session: Session,
+  patch: { shuttleBoxPrice?: number | null; shuttleCount?: number | null },
+  shuttlesPerBox: number,
+): Session {
+  const next = { ...session, ...patch };
+  if (next.shuttleCount === null || !next.shuttleBoxPrice) return next;
+  return { ...next, shuttleCost: calculateShuttleCost(next.shuttleBoxPrice, next.shuttleCount, shuttlesPerBox) };
+}
+
+/** Nhập tay tiền cầu: bỏ số quả để tiền cầu không bị tự tính đè lên. */
+export function setManualShuttleCost(session: Session, shuttleCost: number): Session {
+  return { ...session, shuttleCost, shuttleCount: null };
+}
 
 /** session_2026_09_26, thêm hậu tố _2, _3... nếu trong ngày đã có buổi khác. */
 export function makeSessionId(date: string, existingIds: string[]): string {
@@ -30,6 +56,8 @@ export function createSession(settings: SessionDefaults, existing: Session[], da
     courtCount: settings.defaultCourtCount,
     courtCost: 0,
     shuttleCost: 0,
+    shuttleBoxPrice: getDefaultShuttleBoxPrice(settings, existing),
+    shuttleCount: null,
     players: [],
     pairings: [],
     payments: [],
@@ -84,6 +112,8 @@ export function duplicateSession(source: Session, options: DuplicateOptions, exi
     dayOfWeek: getDayOfWeek(options.date),
     courtCost: 0,
     shuttleCost: 0,
+    // Giá hộp cầu được giữ lại; số quả đã dùng là của riêng từng buổi.
+    shuttleCount: null,
     players,
     pairings: [],
     payments,

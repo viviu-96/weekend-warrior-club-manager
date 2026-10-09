@@ -133,6 +133,8 @@ const asNumber = (value: unknown, fallback = 0): number =>
 const asBoolean = (value: unknown, fallback: boolean): boolean => (typeof value === 'boolean' ? value : fallback);
 const asScore = (value: unknown): number | null =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.min(Math.floor(value), 99) : null;
+const asAmountOrNull = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
 const asGender = (value: unknown): Gender | null => (value === 'male' || value === 'female' ? value : null);
 
 function parseSettings(raw: unknown, errors: string[]): Settings {
@@ -156,6 +158,8 @@ function parseSettings(raw: unknown, errors: string[]): Settings {
     defaultCourtCount: Math.max(1, Math.floor(asNumber(raw.defaultCourtCount, DEFAULT_SETTINGS.defaultCourtCount))),
     defaultTime: asString(raw.defaultTime, DEFAULT_SETTINGS.defaultTime),
     mergeGuestsByDefault: asBoolean(raw.mergeGuestsByDefault, DEFAULT_SETTINGS.mergeGuestsByDefault),
+    shuttleBoxPrice: Math.max(0, Math.round(asNumber(raw.shuttleBoxPrice, DEFAULT_SETTINGS.shuttleBoxPrice))),
+    shuttlesPerBox: Math.max(1, Math.floor(asNumber(raw.shuttlesPerBox, DEFAULT_SETTINGS.shuttlesPerBox))),
   };
 }
 
@@ -296,6 +300,8 @@ function parseSessions(raw: unknown, settings: Settings, errors: string[]): Sess
         courtCount: Math.max(1, Math.floor(asNumber(item.courtCount, settings.defaultCourtCount))),
         courtCost: Math.round(courtCost),
         shuttleCost: Math.round(shuttleCost),
+        shuttleBoxPrice: asAmountOrNull(item.shuttleBoxPrice),
+        shuttleCount: asAmountOrNull(item.shuttleCount),
         players,
         pairings: parsePairings(item.pairings, playerIds),
         payments: parsePayments(item.payments, playerIds),

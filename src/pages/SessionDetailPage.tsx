@@ -66,7 +66,7 @@ export function SessionDetailPage() {
       </Link>
       <PageHeader
         title={formatSessionDate(session.date)}
-        description={`${session.time} • ${session.players.length} người • ${session.courtCount} sân • ${formatVND(reconciliation.totalCost)}`}
+        description={`${session.time} • ${session.players.length} người • ${session.courtCount} sân${session.shuttleCount ? ` • ${session.shuttleCount} quả cầu` : ''} • ${formatVND(reconciliation.totalCost)}`}
         actions={
           <>
             <Button variant="primary" icon={<Swords size={16} aria-hidden="true" />} onClick={() => open('/xep-cap')}>

@@ -204,6 +204,13 @@ Từng buổi chơi cũng xuất được ra JSON và CSV (mở bằng Excel) �
 
 - **Tiền sân** chia đều cho người được tick "Tính sân". Người có tên trong danh sách nhưng không chơi
   vẫn chịu tiền sân.
+- **Tiền cầu tự tính:** nhập *Giá 1 hộp cầu* và *Số quả cầu đã dùng* của buổi, ứng dụng tính
+  `tiền cầu = giá hộp ÷ số quả trong hộp × số quả đã dùng` (mặc định 12 quả một hộp), làm tròn tới đồng và
+  tính lại mỗi khi đổi một trong hai số. Ví dụ hộp 324.000 ₫, dùng 7 quả → 189.000 ₫.
+  - Giá hộp mặc định và số quả trong hộp đặt ở Cài đặt (`shuttleBoxPrice`, `shuttlesPerBox` trong
+    `settings.json`). Buổi mới tự lấy giá này; nếu chưa đặt thì lấy giá của buổi gần nhất. Mỗi buổi lưu giá
+    riêng (`shuttleBoxPrice`, `shuttleCount` trong `sessions.json`) nên đổi giá sau này không làm sai buổi cũ.
+  - Vẫn có thể gõ thẳng vào ô *Tiền cầu*; khi đó số quả được bỏ trống để tiền không bị tính đè.
 - **Tiền cầu** chỉ chia cho người thực sự chơi. Không chơi → không tính cầu.
 - **Nửa buổi**: trả 50% suất cầu chuẩn (suất chuẩn = tiền cầu / số người chịu cầu); phần còn lại chia
   đều cho người chơi cả buổi. Tiền sân mặc định vẫn đủ suất; đổi sang 50% ở Cài đặt (`halfPlayCourtMode`).
@@ -315,8 +322,8 @@ Sân: 28.000/người. Cầu: 9 người chịu → suất chuẩn 21.000, nửa
 
 ## Kiểm thử
 
-`npm test` chạy 134 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
-giới tính, vãng lai, xếp lại, lịch sử partner, chia sân, làm tròn, tiền sân/cầu, không chơi, nửa buổi,
+`npm test` chạy 143 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
+giới tính, vãng lai, xếp lại, lịch sử partner, chia sân, làm tròn, tiền sân/cầu, tự tính tiền cầu theo số quả, không chơi, nửa buổi,
 ứng trước, đóng góp cầu, gộp 1 và 2 khách, không gộp, còn thiếu, đóng dư, đối soát, nhân bản buổi,
 validation, import lỗi, nội dung Zalo, CSV, JSON, nhiều lượt đấu và xoay vòng người chờ, bảng thu gộp,
 công nợ, thống kê thành viên, luật tính điểm, tỉ số và thắng/thua.

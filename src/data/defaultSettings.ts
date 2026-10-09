@@ -9,4 +9,7 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultCourtCount: seedSettings.defaultCourtCount,
   defaultTime: seedSettings.defaultTime,
   mergeGuestsByDefault: seedSettings.mergeGuestsByDefault,
+  // Giá hộp cầu là số riêng của từng CLB nên không lấy từ dữ liệu mẫu.
+  shuttleBoxPrice: 0,
+  shuttlesPerBox: 12,
 };

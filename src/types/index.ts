@@ -16,6 +16,10 @@ export interface Settings {
   defaultCourtCount: number;
   defaultTime: string;
   mergeGuestsByDefault: boolean;
+  /** Giá một hộp cầu, dùng làm mặc định cho buổi mới. 0 = chưa đặt. */
+  shuttleBoxPrice: number;
+  /** Số quả cầu trong một hộp. */
+  shuttlesPerBox: number;
 }
 
 export interface Member {
@@ -76,7 +80,12 @@ export interface Session {
   time: string;
   courtCount: number;
   courtCost: number;
+  /** Tiền cầu của buổi. Tự tính từ giá hộp và số quả khi `shuttleCount` khác null. */
   shuttleCost: number;
+  /** Giá một hộp cầu áp dụng cho buổi này; null khi chưa nhập. */
+  shuttleBoxPrice: number | null;
+  /** Số quả cầu đã dùng trong buổi; null = tiền cầu được nhập tay. */
+  shuttleCount: number | null;
   players: SessionPlayer[];
   pairings: Match[];
   payments: PaymentEntry[];

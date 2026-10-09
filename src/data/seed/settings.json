@@ -15,5 +15,7 @@
   "halfPlayCourtMode": "full",
   "defaultCourtCount": 1,
   "defaultTime": "08:00-10:00",
-  "mergeGuestsByDefault": true
+  "mergeGuestsByDefault": true,
+  "shuttleBoxPrice": 324000,
+  "shuttlesPerBox": 12
 }
