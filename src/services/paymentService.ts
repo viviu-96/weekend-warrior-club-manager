@@ -4,6 +4,20 @@ import { roundPayment } from './roundingService';
 
 type PaymentSettings = Pick<Settings, 'halfPlayCourtMode'>;
 
+/**
+ * Tiền cầu của buổi = giá một hộp ÷ số quả trong hộp × số quả đã dùng, làm tròn tới đồng.
+ * Việc làm tròn lên 500 ₫ chỉ áp dụng cho số tiền của từng người, không áp dụng ở đây.
+ */
+export function calculateShuttleCost(boxPrice: number, shuttleCount: number, shuttlesPerBox: number): number {
+  if (boxPrice <= 0 || shuttleCount <= 0 || shuttlesPerBox <= 0) return 0;
+  return Math.round((boxPrice * shuttleCount) / shuttlesPerBox);
+}
+
+/** Giá một quả cầu (để hiển thị). */
+export function calculateShuttleUnitPrice(boxPrice: number, shuttlesPerBox: number): number {
+  return boxPrice > 0 && shuttlesPerBox > 0 ? boxPrice / shuttlesPerBox : 0;
+}
+
 export function createDefaultPayment(playerId: string): PaymentEntry {
   return {
     playerId,

@@ -1,6 +1,6 @@
 import { Download, Plus, Trash2, Upload } from 'lucide-react';
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Button, Card, Field, Modal, PageHeader, Select, TextInput, Toggle } from '../components/ui';
+import { Button, Card, Field, Modal, MoneyInput, PageHeader, Select, TextInput, Toggle } from '../components/ui';
 import { useAppData } from '../hooks/useAppData';
 import { useFeedback } from '../hooks/useFeedback';
 import { exportAllJSON } from '../services/exportService';
@@ -9,7 +9,7 @@ import { sortLevels } from '../services/pairingService';
 import { parseBackupText } from '../services/validationService';
 import type { HalfPlayCourtMode, Level, Settings } from '../types';
 import { downloadTextFile, readFileAsText } from '../utils/browser';
-import { todayISO } from '../utils/format';
+import { formatVND, todayISO } from '../utils/format';
 
 function GeneralSettings() {
   const { settings, updateSettings } = useAppData();
@@ -24,6 +24,8 @@ function GeneralSettings() {
       clubName: draft.clubName.trim() || settings.clubName,
       defaultTime: draft.defaultTime.trim() || settings.defaultTime,
       defaultCourtCount: Math.min(20, Math.max(1, Math.floor(draft.defaultCourtCount) || 1)),
+      shuttleBoxPrice: Math.max(0, Math.round(draft.shuttleBoxPrice) || 0),
+      shuttlesPerBox: Math.min(100, Math.max(1, Math.floor(draft.shuttlesPerBox) || 12)),
       halfPlayCourtMode: draft.halfPlayCourtMode,
       mergeGuestsByDefault: draft.mergeGuestsByDefault,
     };
@@ -45,6 +47,15 @@ function GeneralSettings() {
           </Field>
           <Field label="Số sân mặc định">
             <TextInput type="number" min={1} max={20} value={draft.defaultCourtCount} onChange={(event) => setDraft({ ...draft, defaultCourtCount: Number(event.target.value) })} />
+          </Field>
+          <Field label="Giá 1 hộp cầu" hint="Tự điền cho buổi mới; mỗi buổi vẫn sửa riêng được.">
+            <MoneyInput label="Giá một hộp cầu" value={draft.shuttleBoxPrice} onChange={(shuttleBoxPrice) => setDraft({ ...draft, shuttleBoxPrice })} />
+          </Field>
+          <Field
+            label="Số quả cầu trong 1 hộp"
+            hint={draft.shuttleBoxPrice > 0 && draft.shuttlesPerBox > 0 ? `${formatVND(draft.shuttleBoxPrice / draft.shuttlesPerBox)} / quả` : undefined}
+          >
+            <TextInput type="number" min={1} max={100} value={draft.shuttlesPerBox} onChange={(event) => setDraft({ ...draft, shuttlesPerBox: Number(event.target.value) })} />
           </Field>
         </div>
         <Field label="Tiền sân của người chơi nửa buổi" hint="Tiền cầu của người chơi nửa buổi luôn là 50% suất; phần còn lại chia đều cho người chơi cả buổi.">

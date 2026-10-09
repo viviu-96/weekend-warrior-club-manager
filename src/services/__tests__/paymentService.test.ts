@@ -5,7 +5,9 @@ import {
   calculateOutstanding,
   calculatePlayerPayment,
   calculateSessionPayments,
+  calculateShuttleCost,
   calculateShuttleShare,
+  calculateShuttleUnitPrice,
   markAllPaid,
   mergeGuestPayment,
   calculateSessionPlayerPayments,
@@ -32,6 +34,28 @@ describe('roundPayment', () => {
   it('không bị đẩy lên bậc trên vì sai số dấu phẩy động', () => {
     expect(roundPayment(62500.0000000001)).toBe(62500);
     expect(roundPayment(0.1 * 3 * 100000)).toBe(30000);
+  });
+});
+
+describe('tự tính tiền cầu từ giá hộp và số quả', () => {
+  it('tiền cầu = giá hộp ÷ 12 × số quả', () => {
+    expect(calculateShuttleCost(324000, 7, 12)).toBe(189000);
+    expect(calculateShuttleCost(324000, 12, 12)).toBe(324000);
+    expect(calculateShuttleCost(315000, 1, 12)).toBe(26250);
+    expect(calculateShuttleUnitPrice(324000, 12)).toBe(27000);
+  });
+
+  it('làm tròn tới đồng khi giá một quả bị lẻ', () => {
+    // 320.000 ÷ 12 = 26.666,67 ₫ / quả.
+    expect(calculateShuttleCost(320000, 7, 12)).toBe(186667);
+    expect(calculateShuttleCost(320000, 3, 12)).toBe(80000);
+  });
+
+  it('thiếu giá hộp hoặc số quả thì bằng 0', () => {
+    expect(calculateShuttleCost(0, 7, 12)).toBe(0);
+    expect(calculateShuttleCost(324000, 0, 12)).toBe(0);
+    expect(calculateShuttleCost(324000, 7, 0)).toBe(0);
+    expect(calculateShuttleUnitPrice(0, 12)).toBe(0);
   });
 });
 

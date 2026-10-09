@@ -10,10 +10,13 @@ import { calculateSessionPayments } from '../paymentService';
 import {
   createSession,
   duplicateSession,
+  getDefaultShuttleBoxPrice,
   makeSessionId,
   removePlayer,
+  setManualShuttleCost,
   syncPayments,
   updatePaymentEntry,
+  updateShuttleUsage,
 } from '../sessionService';
 import { parseAppData, parseBackupText, validateForPairing, validatePayments } from '../validationService';
 import { LEVELS, makePlayer, makeSession, patchPayment, SETTINGS } from './testHelpers';
@@ -122,6 +125,54 @@ describe('sessionService', () => {
     expect(off.payments[0]).toMatchObject({ playFraction: 0, payShuttle: false, payCourt: true });
     const on = updatePaymentEntry(off, 'a', { playFraction: 1 });
     expect(on.payments[0]!.payShuttle).toBe(true);
+  });
+
+  it('đổi giá hộp hoặc số quả thì tiền cầu tự tính lại', () => {
+    const base = makeSession([makePlayer('a', 'TB')], { shuttleCost: 0 });
+    const withPrice = updateShuttleUsage(base, { shuttleBoxPrice: 324000 }, 12);
+    expect(withPrice).toMatchObject({ shuttleBoxPrice: 324000, shuttleCount: null, shuttleCost: 0 });
+    const counted = updateShuttleUsage(withPrice, { shuttleCount: 7 }, 12);
+    expect(counted).toMatchObject({ shuttleCount: 7, shuttleCost: 189000 });
+    expect(updateShuttleUsage(counted, { shuttleCount: 9 }, 12).shuttleCost).toBe(243000);
+    expect(updateShuttleUsage(counted, { shuttleBoxPrice: 360000 }, 12).shuttleCost).toBe(210000);
+    expect(updateShuttleUsage(counted, { shuttleCount: 0 }, 12).shuttleCost).toBe(0);
+    // Tiền cầu tự tính đi thẳng vào phần chia tiền.
+    expect(calculateSessionPayments(counted, SETTINGS).reconciliation.totalShuttle).toBe(189000);
+  });
+
+  it('chưa có giá hộp hoặc xoá số quả thì giữ nguyên tiền cầu đang có', () => {
+    const manual = makeSession([makePlayer('a', 'TB')], { shuttleCost: 150000 });
+    expect(updateShuttleUsage(manual, { shuttleCount: 5 }, 12)).toMatchObject({ shuttleCount: 5, shuttleCost: 150000 });
+    const counted = updateShuttleUsage(manual, { shuttleBoxPrice: 324000, shuttleCount: 5 }, 12);
+    expect(counted.shuttleCost).toBe(135000);
+    expect(updateShuttleUsage(counted, { shuttleCount: null }, 12)).toMatchObject({ shuttleCount: null, shuttleCost: 135000 });
+  });
+
+  it('nhập tay tiền cầu thì bỏ số quả để không bị tính đè', () => {
+    const counted = updateShuttleUsage(makeSession([makePlayer('a', 'TB')]), { shuttleBoxPrice: 324000, shuttleCount: 7 }, 12);
+    expect(setManualShuttleCost(counted, 200000)).toMatchObject({ shuttleCost: 200000, shuttleCount: null, shuttleBoxPrice: 324000 });
+  });
+
+  it('buổi mới lấy giá hộp từ Cài đặt, nếu chưa đặt thì lấy của buổi gần nhất', () => {
+    expect(createSession({ ...SETTINGS, shuttleBoxPrice: 300000 }, [], '2026-10-10')).toMatchObject({ shuttleBoxPrice: 300000, shuttleCount: null, shuttleCost: 0 });
+    const older = makeSession([], { id: 'old', date: '2026-09-01', shuttleBoxPrice: 280000 });
+    const newer = makeSession([], { id: 'new', date: '2026-09-20', shuttleBoxPrice: 324000 });
+    const noPrice = makeSession([], { id: 'none', date: '2026-09-27' });
+    expect(getDefaultShuttleBoxPrice(SETTINGS, [older, newer, noPrice])).toBe(324000);
+    expect(createSession(SETTINGS, [older, newer, noPrice], '2026-10-10').shuttleBoxPrice).toBe(324000);
+    expect(createSession(SETTINGS, [], '2026-10-10').shuttleBoxPrice).toBeNull();
+  });
+
+  it('nhân bản buổi giữ giá hộp, đặt lại số quả và tiền cầu', () => {
+    const source = updateShuttleUsage(makeSession([makePlayer('a', 'TB')]), { shuttleBoxPrice: 324000, shuttleCount: 7 }, 12);
+    expect(duplicateSession(source, { date: '2026-10-03', keepGuests: true }, [source])).toMatchObject({ shuttleBoxPrice: 324000, shuttleCount: null, shuttleCost: 0 });
+  });
+
+  it('dữ liệu cũ không có giá hộp / số quả vẫn đọc được', () => {
+    const { shuttleBoxPrice: _price, shuttleCount: _count, ...legacy } = makeSession([makePlayer('a', 'TB')]);
+    const { data } = parseAppData({ members: [], sessions: [legacy], settings: { levels: LEVELS } });
+    expect(data!.sessions[0]).toMatchObject({ shuttleCost: 189000, shuttleBoxPrice: null, shuttleCount: null });
+    expect(data!.settings).toMatchObject({ shuttleBoxPrice: 0, shuttlesPerBox: 12 });
   });
 
   it('syncPayments thêm dòng thanh toán cho người mới', () => {

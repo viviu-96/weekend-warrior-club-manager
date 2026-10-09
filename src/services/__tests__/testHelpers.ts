@@ -31,6 +31,8 @@ export function makeSession(players: SessionPlayer[], overrides: Partial<Session
     courtCount: 2,
     courtCost: 280000,
     shuttleCost: 189000,
+    shuttleBoxPrice: null,
+    shuttleCount: null,
     players,
     pairings: [],
     payments: players.map((p) => createDefaultPayment(p.id)),

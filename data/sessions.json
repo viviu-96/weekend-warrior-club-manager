@@ -440,6 +440,8 @@
     "courtCount": 2,
     "courtCost": 280000,
     "shuttleCost": 189000,
+    "shuttleBoxPrice": 324000,
+    "shuttleCount": 7,
     "players": [
       {
         "id": "player_0919_01",
@@ -797,6 +799,8 @@
     "courtCount": 1,
     "courtCost": 140000,
     "shuttleCost": 108000,
+    "shuttleBoxPrice": 324000,
+    "shuttleCount": 4,
     "players": [
       {
         "id": "player_0920_01",
@@ -1074,6 +1078,8 @@
     "courtCount": 2,
     "courtCost": 280000,
     "shuttleCost": 216000,
+    "shuttleBoxPrice": 324000,
+    "shuttleCount": 8,
     "players": [
       {
         "id": "player_0926_01",
@@ -1511,6 +1517,8 @@
     "courtCount": 1,
     "courtCost": 140000,
     "shuttleCost": 81000,
+    "shuttleBoxPrice": 324000,
+    "shuttleCount": 3,
     "players": [
       {
         "id": "player_0927_01",
