@@ -15,9 +15,16 @@ export function getDefaultShuttleBoxPrice(settings: Pick<Settings, 'shuttleBoxPr
   return latest?.shuttleBoxPrice ?? null;
 }
 
+/** Tiền cầu đang được tự tính khi buổi có cả giá hộp lẫn số quả đã dùng. */
+export function isShuttleCostAuto(session: Pick<Session, 'shuttleBoxPrice' | 'shuttleCount'>): boolean {
+  return session.shuttleCount !== null && (session.shuttleBoxPrice ?? 0) > 0;
+}
+
 /**
  * Cập nhật giá hộp cầu / số quả đã dùng và tự tính lại tiền cầu.
- * Khi đã có số quả nhưng chưa có giá hộp thì giữ nguyên tiền cầu đang có.
+ * - Đủ cả hai số: tiền cầu = giá hộp ÷ số quả trong hộp × số quả đã dùng.
+ * - Tiền cầu đang được tự tính mà một trong hai ô bị xoá: tiền cầu về 0, vì con số cũ không còn căn cứ.
+ * - Tiền cầu đang nhập tay và vẫn chưa đủ hai số: giữ nguyên số đã nhập.
  */
 export function updateShuttleUsage(
   session: Session,
@@ -25,8 +32,10 @@ export function updateShuttleUsage(
   shuttlesPerBox: number,
 ): Session {
   const next = { ...session, ...patch };
-  if (next.shuttleCount === null || !next.shuttleBoxPrice) return next;
-  return { ...next, shuttleCost: calculateShuttleCost(next.shuttleBoxPrice, next.shuttleCount, shuttlesPerBox) };
+  if (isShuttleCostAuto(next)) {
+    return { ...next, shuttleCost: calculateShuttleCost(next.shuttleBoxPrice ?? 0, next.shuttleCount ?? 0, shuttlesPerBox) };
+  }
+  return isShuttleCostAuto(session) ? { ...next, shuttleCost: 0 } : next;
 }
 
 /** Nhập tay tiền cầu: bỏ số quả để tiền cầu không bị tự tính đè lên. */

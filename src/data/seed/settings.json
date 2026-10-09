@@ -16,6 +16,6 @@
   "defaultCourtCount": 1,
   "defaultTime": "08:00-10:00",
   "mergeGuestsByDefault": true,
-  "shuttleBoxPrice": 324000,
+  "shuttleBoxPrice": 330000,
   "shuttlesPerBox": 12
 }
