@@ -24,7 +24,7 @@ import { useAppData } from '../hooks/useAppData';
 import { useFeedback } from '../hooks/useFeedback';
 import { generateZaloPaymentText } from '../services/exportService';
 import { applyPaidToRow, calculateSessionPayments, calculateShuttleUnitPrice, markAllPaid, type PaymentRow } from '../services/paymentService';
-import { setManualShuttleCost, updateShuttleUsage } from '../services/sessionService';
+import { isShuttleCostAuto, setManualShuttleCost, updateShuttleUsage } from '../services/sessionService';
 import { validatePayments } from '../services/validationService';
 import { formatSessionDate, formatVND } from '../utils/format';
 
@@ -108,8 +108,7 @@ function SessionPayments() {
 
   const perBox = settings.shuttlesPerBox;
   const unitPrice = calculateShuttleUnitPrice(session.shuttleBoxPrice ?? 0, perBox);
-  // Tiền cầu đang được tự tính khi đã có cả giá hộp lẫn số quả.
-  const autoShuttle = session.shuttleCount !== null && unitPrice > 0;
+  const autoShuttle = isShuttleCostAuto(session);
 
   return (
     <>
