@@ -13,11 +13,6 @@ export function formatVND(amount: number): string {
   return `${groupThousands(amount)} ₫`;
 }
 
-/** 35000 -> "35.000đ" (dùng cho nội dung gửi Zalo) */
-export function formatVNDCompact(amount: number): string {
-  return `${groupThousands(amount)}đ`;
-}
-
 /** Chỉ giữ chữ số: "1.250.000 ₫" -> 1250000 */
 export function parseMoneyInput(text: string): number {
   const digits = text.replace(/\D/g, '');

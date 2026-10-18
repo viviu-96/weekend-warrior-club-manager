@@ -1,5 +1,5 @@
 import type { AppData, Level, Session, Settings } from '../types';
-import { formatDate, formatVNDCompact, getDayOfWeek } from '../utils/format';
+import { formatDate, getDayOfWeek, getDayShort } from '../utils/format';
 import { genderLabel } from './memberService';
 import { getLevelScore, getMatchWinner, getRoundMatches, getRounds, getWaitingPlayers } from './pairingService';
 import { calculateSessionPayments, getPaymentEntry } from './paymentService';
@@ -108,28 +108,53 @@ export function exportCSV(session: Session, settings: PaymentSettings): string {
 }
 
 // ---------------------------------------------------------------------------
-// Nội dung gửi Zalo
+// Copy vào Excel (TSV: cột cách nhau bằng tab, Excel tự tách khi dán)
 // ---------------------------------------------------------------------------
 
-/**
- * Nội dung thu tiền gửi nhóm Zalo. Mỗi dòng là số tiền người đó cần đóng
- * (đã trừ tiền ứng trước); không chứa thông tin kỹ thuật.
- */
-export function generateZaloPaymentText(session: Session, settings: PaymentSettings): string {
-  const { rows } = calculateSessionPayments(session, settings);
-  let total = 0;
-  const lines = rows.map((row) => {
-    const due = Math.max(row.roundedPayable - row.advancePayment, 0);
-    total += due;
-    const extras: string[] = [];
-    if (row.guestCount > 0) extras.push(`bao gồm ${row.guestCount} bạn`);
-    if (row.overpaid > 0) extras.push(`dư ${formatVNDCompact(row.overpaid)}`);
-    else if (due > 0 && row.outstanding === 0) extras.push('đã đóng ✅');
-    else if (row.paidAmount > 0) extras.push(`đã đóng ${formatVNDCompact(row.paidAmount)}, còn ${formatVNDCompact(row.outstanding)}`);
-    return `${row.name}: ${formatVNDCompact(due)}${extras.length > 0 ? ` (${extras.join(', ')})` : ''}`;
-  });
-  return ['💰 THU TIỀN CẦU LÔNG', sessionDateLine(session), '', ...lines, '', `Tổng: ${formatVNDCompact(total)}`].join('\n');
+/** Ghép bảng thành TSV; bỏ tab/xuống dòng trong ô để không làm lệch cột. */
+export function toTSV(rows: (string | number)[][]): string {
+  return rows.map((row) => row.map((cell) => String(cell).replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n');
 }
+
+/** Bảng thu tiền của một buổi, cùng các cột với bảng trên màn hình; số tiền để dạng số. */
+export function generatePaymentSheetTSV(session: Session, settings: PaymentSettings): string {
+  const { rows } = calculateSessionPayments(session, settings);
+  const day = getDayShort(session.date);
+  const sum = (pick: (row: (typeof rows)[number]) => number) => rows.reduce((s, row) => s + pick(row), 0);
+  return toTSV([
+    ['STT', 'Tên', `Tiền sân ${day}`, `Tiền cầu ${day}`, 'Góp cầu', 'Thành tiền', 'Đã ứng', 'Đã thu', 'Còn thiếu', 'Dư', 'Ghi chú'],
+    ...rows.map((row, index) => [
+      index + 1,
+      row.name,
+      Math.round(row.courtShare),
+      Math.round(row.shuttleShare),
+      row.shuttleContribution,
+      row.roundedPayable,
+      row.advancePayment,
+      row.paidAmount,
+      row.outstanding,
+      row.overpaid,
+      row.notes.join(' • '),
+    ]),
+    [
+      '',
+      `Tổng (${rows.length} người)`,
+      session.courtCost,
+      session.shuttleCost,
+      sum((row) => row.shuttleContribution),
+      sum((row) => row.roundedPayable),
+      sum((row) => row.advancePayment),
+      sum((row) => row.paidAmount),
+      sum((row) => row.outstanding),
+      sum((row) => row.overpaid),
+      '',
+    ],
+  ]);
+}
+
+// ---------------------------------------------------------------------------
+// Nội dung kết quả xếp cặp
+// ---------------------------------------------------------------------------
 
 export interface PairingTextOptions {
   levels: Level[];

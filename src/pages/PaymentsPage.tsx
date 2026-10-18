@@ -22,7 +22,7 @@ import { downloadSessionCSV, downloadSessionJSON } from '../features/sessions/se
 import { NoSessionState, SessionPicker } from '../features/sessions/SessionPicker';
 import { useAppData } from '../hooks/useAppData';
 import { useFeedback } from '../hooks/useFeedback';
-import { generateZaloPaymentText } from '../services/exportService';
+import { generatePaymentSheetTSV } from '../services/exportService';
 import { applyPaidToRow, calculateSessionPayments, calculateShuttleUnitPrice, markAllPaid, type PaymentRow } from '../services/paymentService';
 import { isShuttleCostAuto, setManualShuttleCost, updateShuttleUsage } from '../services/sessionService';
 import { validatePayments } from '../services/validationService';
@@ -199,7 +199,7 @@ function SessionPayments() {
               }
               actions={
                 <div className="flex flex-wrap gap-2 print:hidden">
-                  <CopyButton variant="primary" label="Copy gửi Zalo" successMessage="Đã copy nội dung gửi Zalo." getText={() => generateZaloPaymentText(session, settings)} />
+                  <CopyButton variant="primary" label="Copy vào Excel" successMessage="Đã copy bảng thu, dán vào Excel bằng Ctrl+V." getText={() => generatePaymentSheetTSV(session, settings)} />
                   {!locked && reconciliation.totalOutstanding > 0 && (
                     <Button size="sm" icon={<CheckCheck size={14} aria-hidden="true" />} onClick={() => void collectAll()}>
                       Thu đủ tất cả

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import seedMembers from '../../data/seed/members.json';
 import seedSessions from '../../data/seed/sessions.json';
 import seedSettings from '../../data/seed/settings.json';
-import { formatVND, formatVNDCompact, getDayOfWeek, parseMoneyInput } from '../../utils/format';
-import { exportCSV, exportJSON, generateZaloPairingText, generateZaloPaymentText } from '../exportService';
+import { formatVND, getDayOfWeek, parseMoneyInput } from '../../utils/format';
+import { exportCSV, exportJSON, generatePaymentSheetTSV, generateZaloPairingText } from '../exportService';
 import { findMembersByName, parseNameList, searchMembers, sortMembersBy, type MemberSort } from '../memberService';
 import { generateMatches, getEligiblePlayers, createSeededRng } from '../pairingService';
 import { calculateSessionPayments } from '../paymentService';
@@ -34,7 +34,6 @@ describe('định dạng', () => {
     expect(formatVND(120000)).toBe('120.000 ₫');
     expect(formatVND(1250000)).toBe('1.250.000 ₫');
     expect(formatVND(0)).toBe('0 ₫');
-    expect(formatVNDCompact(94000)).toBe('94.000đ');
     expect(parseMoneyInput('1.250.000 ₫')).toBe(1250000);
   });
 
@@ -276,19 +275,22 @@ describe('export', () => {
   session = patchPayment(session, 'Luân', { advancePayment: 17000 });
   session = patchPayment(session, 'Bạn Phi', { referrerPlayerId: 'Phi' });
 
-  it('nội dung Zalo thu tiền: gộp khách, trừ tiền ứng, không có thông tin kỹ thuật', () => {
-    expect(generateZaloPaymentText(session, SETTINGS)).toBe(
-      [
-        '💰 THU TIỀN CẦU LÔNG',
-        '📅 Thứ 7 – 26/09/2026',
-        '',
-        'Hạnh: 47.000đ',
-        'Luân: 30.000đ',
-        'Phi: 94.000đ (bao gồm 1 bạn)',
-        '',
-        'Tổng: 171.000đ',
-      ].join('\n'),
-    );
+  it('copy vào Excel: mỗi ô cách nhau bằng tab, số tiền dạng số, có dòng tổng', () => {
+    const lines = generatePaymentSheetTSV(session, SETTINGS).split('\n').map((line) => line.split('\t'));
+    expect(lines).toEqual([
+      ['STT', 'Tên', 'Tiền sân T7', 'Tiền cầu T7', 'Góp cầu', 'Thành tiền', 'Đã ứng', 'Đã thu', 'Còn thiếu', 'Dư', 'Ghi chú'],
+      ['1', 'Hạnh', '28000', '19000', '0', '47000', '0', '0', '47000', '0', ''],
+      ['2', 'Luân', '28000', '19000', '0', '47000', '17000', '0', '30000', '0', ''],
+      ['3', 'Phi', '56000', '38000', '0', '94000', '0', '0', '94000', '0', 'Bao gồm 1 bạn'],
+      ['', 'Tổng (3 người)', '112000', '76000', '0', '188000', '17000', '0', '171000', '0', ''],
+    ]);
+  });
+
+  it('copy vào Excel: tab và xuống dòng trong ghi chú không làm lệch cột', () => {
+    const noted = patchPayment(session, 'Hạnh', { note: 'về sớm\tđau\nchân' });
+    const row = generatePaymentSheetTSV(noted, SETTINGS).split('\n')[1]!.split('\t');
+    expect(row).toHaveLength(11);
+    expect(row[10]).toBe('về sớm đau chân');
   });
 
   it('nội dung Zalo xếp cặp', () => {
