@@ -7,6 +7,8 @@
     "courtCount": 2,
     "courtCost": 280000,
     "shuttleCost": 347000,
+    "shuttleBoxPrice": null,
+    "shuttleCount": null,
     "players": [
       {
         "id": "player_mutjjwwp2jugin",
@@ -174,6 +176,7 @@
     "pairings": [
       {
         "id": "match_1",
+        "round": 1,
         "matchNumber": 1,
         "court": 1,
         "teamA": [
@@ -183,10 +186,13 @@
         "teamB": [
           "player_mutjk2h6cav28r",
           "player_mutjjzuc2v8wtb"
-        ]
+        ],
+        "scoreA": null,
+        "scoreB": null
       },
       {
         "id": "match_2",
+        "round": 1,
         "matchNumber": 2,
         "court": 1,
         "teamA": [
@@ -196,10 +202,13 @@
         "teamB": [
           "player_guest_mutjmixyyi2l4x",
           "player_guest_mutjkzmgc8g5fz"
-        ]
+        ],
+        "scoreA": null,
+        "scoreB": null
       },
       {
         "id": "match_3",
+        "round": 1,
         "matchNumber": 3,
         "court": 2,
         "teamA": [
@@ -209,10 +218,13 @@
         "teamB": [
           "player_guest_mutjnemljvcghw",
           "player_mutjm52s0l7x8z"
-        ]
+        ],
+        "scoreA": null,
+        "scoreB": null
       },
       {
         "id": "match_4",
+        "round": 1,
         "matchNumber": 4,
         "court": 2,
         "teamA": [
@@ -222,7 +234,9 @@
         "teamB": [
           "player_mutjm52sjjgkrj",
           "player_guest_mutjnovyyww6rs"
-        ]
+        ],
+        "scoreA": null,
+        "scoreB": null
       }
     ],
     "payments": [
@@ -255,7 +269,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -266,7 +280,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -277,7 +291,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -288,7 +302,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": "player_mutjkc6wvrot8c",
         "note": ""
       },
@@ -299,7 +313,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -310,7 +324,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -321,7 +335,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -332,7 +346,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -343,7 +357,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -354,7 +368,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": "player_mutjql8sqcnt4b",
         "note": ""
       },
@@ -365,7 +379,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": "player_mutjk742q88x3g",
         "note": ""
       },
@@ -376,7 +390,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": "player_mutjql8sqcnt4b",
         "note": ""
       },
@@ -387,7 +401,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": "player_mutjql8su6eage",
         "note": ""
       },
@@ -398,7 +412,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": "player_mutjql8su6eage",
         "note": ""
       },
@@ -409,7 +423,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -420,7 +434,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 35000,
         "referrerPlayerId": null,
         "note": ""
       }
@@ -430,7 +444,7 @@
     "paymentLocked": false,
     "mergeGuests": true,
     "createdAt": "2026-10-04T08:09:43.515Z",
-    "updatedAt": "2026-10-04T08:21:36.316Z"
+    "updatedAt": "2026-10-18T06:46:47.039Z"
   },
   {
     "id": "session_2026_09_19",
@@ -1365,7 +1379,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 32500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1376,7 +1390,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 27000,
-        "paidAmount": 0,
+        "paidAmount": 5500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1409,7 +1423,7 @@
         "payShuttle": true,
         "advancePayment": 20000,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 12500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1431,7 +1445,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 32500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1442,7 +1456,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 25000,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1453,7 +1467,7 @@
         "payShuttle": false,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 17500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1464,7 +1478,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 32500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1475,7 +1489,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 32500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1486,7 +1500,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 32500,
         "referrerPlayerId": "player_0926_04",
         "note": ""
       },
@@ -1497,7 +1511,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 32500,
         "referrerPlayerId": "player_0926_05",
         "note": ""
       }
@@ -1507,7 +1521,7 @@
     "paymentLocked": false,
     "mergeGuests": true,
     "createdAt": "2026-09-26T03:00:00.000Z",
-    "updatedAt": "2026-09-26T03:00:00.000Z"
+    "updatedAt": "2026-10-18T06:47:33.193Z"
   },
   {
     "id": "session_2026_09_27",
@@ -1696,7 +1710,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 22500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1718,7 +1732,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 22500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1729,7 +1743,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 22500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1740,7 +1754,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 22500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1751,7 +1765,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 22500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1762,7 +1776,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 22500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1773,7 +1787,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 22500,
         "referrerPlayerId": null,
         "note": ""
       },
@@ -1784,7 +1798,7 @@
         "payShuttle": true,
         "advancePayment": 0,
         "shuttleContribution": 0,
-        "paidAmount": 0,
+        "paidAmount": 22500,
         "referrerPlayerId": null,
         "note": ""
       }
@@ -1794,6 +1808,349 @@
     "paymentLocked": false,
     "mergeGuests": true,
     "createdAt": "2026-09-27T03:00:00.000Z",
-    "updatedAt": "2026-09-27T03:00:00.000Z"
+    "updatedAt": "2026-10-18T06:47:30.441Z"
+  },
+  {
+    "id": "session_2026_10_11",
+    "date": "2026-10-10",
+    "dayOfWeek": "Thứ 7",
+    "time": "08:00-10:00",
+    "courtCount": 1,
+    "courtCost": 140000,
+    "shuttleCost": 160000,
+    "shuttleBoxPrice": 320000,
+    "shuttleCount": 6,
+    "players": [
+      {
+        "id": "player_mv3xevhrbmpqxe",
+        "memberId": "member_012",
+        "name": "Hạnh",
+        "gender": "male",
+        "level": "TBY",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mv3xeyhvzdljij",
+        "memberId": "member_013",
+        "name": "Hảo",
+        "gender": "male",
+        "level": "Y",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mv3xf14abokn2r",
+        "memberId": "member_010",
+        "name": "Tú",
+        "gender": "male",
+        "level": "Y",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mv3xf3hbkv3jze",
+        "memberId": "member_006",
+        "name": "Duy",
+        "gender": "male",
+        "level": "TB",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mv3xf7rft6xx7v",
+        "memberId": "member_007",
+        "name": "Phi",
+        "gender": "male",
+        "level": "TBY",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_guest_mv3xfhjcg9cf18",
+        "memberId": null,
+        "name": "Đảm",
+        "gender": "female",
+        "level": "TB-",
+        "playerType": "walk_in",
+        "resting": false
+      }
+    ],
+    "pairings": [
+      {
+        "id": "r1_match_1",
+        "round": 1,
+        "matchNumber": 1,
+        "court": 1,
+        "teamA": [
+          "player_mv3xevhrbmpqxe",
+          "player_mv3xeyhvzdljij"
+        ],
+        "teamB": [
+          "player_mv3xf7rft6xx7v",
+          "player_mv3xf14abokn2r"
+        ],
+        "scoreA": null,
+        "scoreB": null
+      }
+    ],
+    "payments": [
+      {
+        "playerId": "player_mv3xevhrbmpqxe",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 50000,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mv3xeyhvzdljij",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 50000,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mv3xf14abokn2r",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 50000,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mv3xf3hbkv3jze",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 50000,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mv3xf7rft6xx7v",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 50000,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_guest_mv3xfhjcg9cf18",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 50000,
+        "referrerPlayerId": "player_mv3xf7rft6xx7v",
+        "note": ""
+      }
+    ],
+    "notes": "",
+    "pairingLocked": false,
+    "paymentLocked": true,
+    "mergeGuests": true,
+    "createdAt": "2026-10-11T14:35:43.124Z",
+    "updatedAt": "2026-10-18T06:48:25.486Z"
+  },
+  {
+    "id": "session_2026_10_18",
+    "date": "2026-10-17",
+    "dayOfWeek": "Thứ 7",
+    "time": "08:00-10:00",
+    "courtCount": 1,
+    "courtCost": 140000,
+    "shuttleCost": 137500,
+    "shuttleBoxPrice": 330000,
+    "shuttleCount": 5,
+    "players": [
+      {
+        "id": "player_mvdgv1iqfsv7gj",
+        "memberId": "member_012",
+        "name": "Hạnh",
+        "gender": "male",
+        "level": "TBY",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdgv45iaj8c9b",
+        "memberId": "member_013",
+        "name": "Hảo",
+        "gender": "male",
+        "level": "Y",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdgwyjum4s2ut",
+        "memberId": "member_mutigs41ayrlh8",
+        "name": "Huy",
+        "gender": "male",
+        "level": "Y+",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdgx12sg1kf21",
+        "memberId": "member_007",
+        "name": "Phi",
+        "gender": "male",
+        "level": "TBY",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdgx3gczbmbzm",
+        "memberId": "member_004",
+        "name": "Việt",
+        "gender": "male",
+        "level": "TB-",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdgx6kvgbd0hv",
+        "memberId": "member_001",
+        "name": "Quang",
+        "gender": "male",
+        "level": "TBK",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_guest_mvdgxpwdlakm4g",
+        "memberId": null,
+        "name": "Đảm",
+        "gender": "female",
+        "level": "TB",
+        "playerType": "walk_in",
+        "resting": false
+      }
+    ],
+    "pairings": [
+      {
+        "id": "r1_match_1",
+        "round": 1,
+        "matchNumber": 1,
+        "court": 1,
+        "teamA": [
+          "player_mvdgv1iqfsv7gj",
+          "player_mvdgx12sg1kf21"
+        ],
+        "teamB": [
+          "player_mvdgx3gczbmbzm",
+          "player_mvdgwyjum4s2ut"
+        ]
+      }
+    ],
+    "payments": [
+      {
+        "playerId": "player_mvdgv1iqfsv7gj",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdgv45iaj8c9b",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdgwyjum4s2ut",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdgx12sg1kf21",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdgx3gczbmbzm",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 50,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdgx6kvgbd0hv",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_guest_mvdgxpwdlakm4g",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": "player_mvdgx12sg1kf21",
+        "note": ""
+      }
+    ],
+    "notes": "",
+    "pairingLocked": false,
+    "paymentLocked": false,
+    "mergeGuests": true,
+    "createdAt": "2026-10-18T06:49:43.789Z",
+    "updatedAt": "2026-10-18T07:01:35.694Z"
   }
 ]
