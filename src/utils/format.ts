@@ -25,6 +25,12 @@ export function parseMoneyInput(text: string): number {
   return Math.min(Number(digits), 999_999_999_999);
 }
 
+/** Đọc ô nhập phần trăm: chỉ lấy chữ số, giới hạn 0–100. */
+export function parsePercentInput(text: string): number {
+  const digits = text.replace(/D/g, '');
+  return digits ? Math.min(Number(digits), 100) : 0;
+}
+
 export function parseISODate(iso: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!match) return null;

@@ -287,3 +287,28 @@ describe('các trường hợp tính tiền khác', () => {
     expect(after).toMatchObject({ paidAmount: 100000, outstanding: 0, overpaid: 10000 });
   });
 });
+
+describe('giảm phần trăm tiền cầu', () => {
+  const players = ['p1', 'p2', 'p3', 'p4'].map((id) => makePlayer(id, 'TB'));
+  const base = makeSession(players, { courtCost: 0, shuttleCost: 120000 });
+  const shuttleOf = (session: typeof base) => calculateSessionPlayerPayments(session, SETTINGS).map((p) => p.shuttleShare);
+
+  it('giảm 50%: trả nửa suất cầu, phần giảm chia đều cho người đóng đủ', () => {
+    // Suất chuẩn 30.000 -> p1 trả 15.000; 3 người còn lại (120.000 - 15.000) / 3 = 35.000.
+    const session = patchPayment(base, 'p1', { shuttleDiscount: 50 });
+    expect(shuttleOf(session)).toEqual([15000, 35000, 35000, 35000]);
+    expect(reconcileSession(session, SETTINGS).unallocatedShuttle).toBe(0);
+    expect(calculateSessionPayments(session, SETTINGS).rows[0]!.notes).toContain('Giảm 50% tiền cầu');
+  });
+
+  it('cộng dồn với nửa buổi: nửa buổi + giảm 50% = 25% suất', () => {
+    const session = patchPayment(base, 'p1', { playFraction: 0.5, shuttleDiscount: 50 });
+    expect(shuttleOf(session)[0]).toBe(7500);
+  });
+
+  it('giảm 100% thì không chịu tiền cầu; giá trị ngoài 0–100 được giới hạn', () => {
+    expect(shuttleOf(patchPayment(base, 'p1', { shuttleDiscount: 100 }))).toEqual([0, 40000, 40000, 40000]);
+    expect(shuttleOf(patchPayment(base, 'p1', { shuttleDiscount: 150 }))[0]).toBe(0);
+    expect(shuttleOf(patchPayment(base, 'p1', { shuttleDiscount: -20 }))[0]).toBe(30000);
+  });
+});

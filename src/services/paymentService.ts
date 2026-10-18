@@ -24,6 +24,7 @@ export function createDefaultPayment(playerId: string): PaymentEntry {
     playFraction: 1,
     payCourt: true,
     payShuttle: true,
+    shuttleDiscount: 0,
     advancePayment: 0,
     shuttleContribution: 0,
     paidAmount: 0,
@@ -68,10 +69,15 @@ export function getCourtFraction(entry: PaymentEntry, settings: PaymentSettings)
   return settings.halfPlayCourtMode === 'half' && entry.playFraction === 0.5 ? 0.5 : 1;
 }
 
-/** Hệ số chịu tiền cầu: chỉ người thực sự chơi mới chịu tiền cầu. */
+/** Hệ số chịu tiền cầu: chỉ người thực sự chơi mới chịu tiền cầu; được giảm theo `shuttleDiscount`. */
 export function getShuttleFraction(entry: PaymentEntry): number {
   if (!entry.payShuttle || entry.playFraction <= 0) return 0;
-  return entry.playFraction;
+  return entry.playFraction * (1 - clampDiscount(entry.shuttleDiscount) / 100);
+}
+
+/** Giữ phần trăm giảm trong khoảng 0–100. */
+export function clampDiscount(percent: number): number {
+  return Number.isFinite(percent) ? Math.min(100, Math.max(0, percent)) : 0;
 }
 
 function sharesByPlayer(session: Session, total: number, fractionOf: (entry: PaymentEntry) => number) {
@@ -119,6 +125,8 @@ export interface PlayerPayment extends Outstanding {
   name: string;
   playerType: PlayerType;
   playFraction: PlayFraction;
+  /** Phần trăm giảm tiền cầu (0–100). */
+  shuttleDiscount: number;
   courtShare: number;
   shuttleShare: number;
   /** courtShare + shuttleShare, chưa làm tròn. */
@@ -185,6 +193,7 @@ export function calculateSessionPlayerPayments(session: Session, settings: Payme
       name: player.name,
       playerType: player.playerType,
       playFraction: entry.playFraction,
+      shuttleDiscount: clampDiscount(entry.shuttleDiscount),
       courtShare,
       shuttleShare,
       grossAmount,
@@ -233,6 +242,9 @@ function describePlayer(payment: PlayerPayment, nameById: Map<string, string>, m
   const notes: string[] = [];
   if (payment.playFraction === 0) notes.push(payment.courtShare > 0 ? 'Không chơi – chỉ tính sân' : 'Không chơi');
   if (payment.playFraction === 0.5) notes.push('Chơi nửa buổi');
+  if (payment.playFraction > 0 && payment.shuttleDiscount > 0) {
+    notes.push(`Giảm ${payment.shuttleDiscount}% tiền cầu`);
+  }
   if (payment.shuttleContribution > 0) notes.push(`Đã đóng góp cầu – ${formatVND(payment.shuttleContribution)}`);
   if (!merged && payment.referrerPlayerId) {
     notes.push(`Khách của ${nameById.get(payment.referrerPlayerId) ?? '?'}`);

@@ -307,7 +307,7 @@ describe('export', () => {
     const lines = csv.trim().split('\r\n');
     expect(lines).toHaveLength(6);
     expect(lines[0]).toContain('Thành tiền');
-    expect(lines[2]).toContain('Luân,Mặc định,Nam,Y,Cả buổi,28000,19000,0,47000,17000,0,30000,0');
+    expect(lines[2]).toContain('Luân,Mặc định,Nam,Y,Cả buổi,0,28000,19000,0,47000,17000,0,30000,0');
   });
 
   it('JSON export đọc lại được nguyên vẹn', () => {

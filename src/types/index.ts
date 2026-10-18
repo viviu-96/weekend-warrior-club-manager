@@ -66,6 +66,8 @@ export interface PaymentEntry {
   playFraction: PlayFraction;
   payCourt: boolean;
   payShuttle: boolean;
+  /** Phần trăm giảm tiền cầu (0–100), ví dụ chấn thương hoặc về sớm. Phần giảm chia cho người đóng đủ. */
+  shuttleDiscount: number;
   advancePayment: number;
   shuttleContribution: number;
   paidAmount: number;

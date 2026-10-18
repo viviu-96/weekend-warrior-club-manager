@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { ValidationIssue } from '../types';
-import { groupThousands, parseMoneyInput } from '../utils/format';
+import { groupThousands, parseMoneyInput, parsePercentInput } from '../utils/format';
 
 export function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ');
@@ -218,6 +218,25 @@ export function MoneyInput({ value, onChange, label, disabled, className }: Mone
         className={cx(inputClass, 'pr-7 text-right tabular-nums')}
       />
       <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-sm text-slate-500">₫</span>
+    </div>
+  );
+}
+
+/** Ô nhập phần trăm (0–100). */
+export function PercentInput({ value, onChange, label, disabled, className }: MoneyInputProps) {
+  return (
+    <div className={cx('relative', className)}>
+      <input
+        type="text"
+        inputMode="numeric"
+        aria-label={label}
+        disabled={disabled}
+        value={value > 0 ? String(value) : ''}
+        placeholder="0"
+        onChange={(event) => onChange(parsePercentInput(event.target.value))}
+        className={cx(inputClass, 'pr-7 text-right tabular-nums')}
+      />
+      <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-sm text-slate-500">%</span>
     </div>
   );
 }
