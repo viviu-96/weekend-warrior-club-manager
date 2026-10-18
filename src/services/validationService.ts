@@ -106,6 +106,9 @@ export function validatePayments(session: Session): ValidationIssue[] {
     if (entry.playFraction === 0 && entry.payShuttle) {
       push('warning', 'SHUTTLE_NOT_PLAYING', `${player.name}: không chơi nên sẽ không bị tính tiền cầu.`);
     }
+    if (entry.shuttleDiscount < 0 || entry.shuttleDiscount > 100) {
+      push('error', 'DISCOUNT_RANGE', `${player.name}: phần trăm giảm tiền cầu phải từ 0 đến 100.`);
+    }
     if (entry.advancePayment < 0 || entry.paidAmount < 0 || entry.shuttleContribution < 0) {
       push('error', 'AMOUNT_NEGATIVE', `${player.name}: số tiền không được âm.`);
     }
@@ -257,6 +260,7 @@ function parsePayments(raw: unknown, playerIds: Set<string>): PaymentEntry[] {
       playFraction,
       payCourt: asBoolean(item.payCourt, true),
       payShuttle: asBoolean(item.payShuttle, playFraction > 0),
+      shuttleDiscount: Math.min(100, Math.max(0, Math.round(asNumber(item.shuttleDiscount)))),
       advancePayment: money(item.advancePayment),
       shuttleContribution: money(item.shuttleContribution),
       paidAmount: money(item.paidAmount),

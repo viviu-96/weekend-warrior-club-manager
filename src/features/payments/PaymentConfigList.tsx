@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { MoneyInput, Select, TextInput } from '../../components/ui';
+import { MoneyInput, PercentInput, Select, TextInput } from '../../components/ui';
 import { getPaymentEntry } from '../../services/paymentService';
 import { updatePaymentEntry } from '../../services/sessionService';
 import type { PaymentEntry, PlayFraction, Session } from '../../types';
@@ -20,9 +20,9 @@ function Labelled({ label, children, className }: { label: string; children: Rea
   );
 }
 
-const GRID = 'lg:grid-cols-[minmax(8.5rem,1.2fr)_8.5rem_3.5rem_3.5rem_6.5rem_6.5rem_minmax(8.5rem,1fr)_minmax(4rem,0.8fr)]';
+const GRID = 'lg:grid-cols-[minmax(8.5rem,1.2fr)_8.5rem_3.5rem_3.5rem_4.5rem_6.5rem_6.5rem_minmax(8.5rem,1fr)_minmax(4rem,0.8fr)]';
 
-/** Thiết lập tính tiền cho từng người: tham gia, tính sân/cầu, đã ứng, góp cầu, người giới thiệu. */
+/** Thiết lập tính tiền cho từng người: tham gia, tính sân/cầu, giảm cầu, đã ứng, góp cầu, người giới thiệu. */
 export function PaymentConfigList({ session, disabled, onChange }: Props) {
   const patch = (playerId: string, change: Partial<PaymentEntry>) => onChange(updatePaymentEntry(session, playerId, change));
 
@@ -33,6 +33,7 @@ export function PaymentConfigList({ session, disabled, onChange }: Props) {
         <span>Tham gia</span>
         <span>Tính sân</span>
         <span>Tính cầu</span>
+        <span>Giảm cầu</span>
         <span>Đã ứng</span>
         <span>Góp cầu</span>
         <span>Người giới thiệu</span>
@@ -87,6 +88,14 @@ export function PaymentConfigList({ session, disabled, onChange }: Props) {
                 </label>
               </div>
 
+              <Labelled label="Giảm cầu">
+                <PercentInput
+                  label={`Phần trăm giảm tiền cầu của ${name}`}
+                  disabled={disabled || !entry.payShuttle || entry.playFraction === 0}
+                  value={entry.shuttleDiscount}
+                  onChange={(shuttleDiscount) => patch(player.id, { shuttleDiscount })}
+                />
+              </Labelled>
               <Labelled label="Đã ứng">
                 <MoneyInput label={`Tiền đã ứng của ${name}`} disabled={disabled} value={entry.advancePayment} onChange={(advancePayment) => patch(player.id, { advancePayment })} />
               </Labelled>

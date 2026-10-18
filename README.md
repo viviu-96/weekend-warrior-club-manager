@@ -125,6 +125,7 @@ Trình độ chính thức: New 1 · Y 2 · Y+ 3 · TBY 4 · TB- 5 · TB 6 · TB
   vãng lai (`walk_in`, `memberId = null`). Vãng lai không tự trở thành thành viên; bấm biểu tượng
   "thêm vào danh sách thành viên" nếu muốn.
 - `resting`: nghỉ, không tham gia xếp cặp. `playFraction`: 1 / 0.5 / 0 (cả buổi / nửa buổi / không chơi).
+- `shuttleDiscount`: phần trăm giảm tiền cầu (0–100), mặc định 0.
 - Lịch sử partner/đối thủ được suy ra từ `pairings` của các buổi trước, không cần lưu riêng.
 
 ### API
@@ -188,6 +189,9 @@ Từng buổi chơi cũng xuất được ra JSON và CSV (mở bằng Excel) �
 - **Tiền cầu** chỉ chia cho người thực sự chơi. Không chơi → không tính cầu.
 - **Nửa buổi**: trả 50% suất cầu chuẩn (suất chuẩn = tiền cầu / số người chịu cầu); phần còn lại chia
   đều cho người chơi cả buổi. Tiền sân mặc định vẫn đủ suất; đổi sang 50% ở Cài đặt (`halfPlayCourtMode`).
+- **Giảm cầu (%)**: dùng khi chấn thương hoặc có việc phải nghỉ sớm (quy định CLB: giảm 50%). Người được giảm
+  trả (100% − mức giảm) của suất cầu chuẩn, phần được giảm chia đều cho người đóng đủ. Cộng dồn với nửa buổi
+  (nửa buổi + giảm 50% = 25% suất). Chỉ giảm tiền cầu, không đổi tiền sân.
 - **Đóng góp cầu**: "Tiền cầu" của buổi là tổng giá trị cầu đã dùng, **gồm cả cầu được đóng góp**.
   Người đóng góp được trừ đúng giá trị đó vào số phải đóng, nên tổng chi không đổi.
 - **Làm tròn** (bắt buộc theo đúng thứ tự): tiền sân từng người → tiền cầu từng người → cộng → trừ đóng
