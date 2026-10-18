@@ -1976,8 +1976,8 @@
     "time": "08:00-10:00",
     "courtCount": 1,
     "courtCost": 140000,
-    "shuttleCost": 137500,
-    "shuttleBoxPrice": 330000,
+    "shuttleCost": 133333,
+    "shuttleBoxPrice": 320000,
     "shuttleCount": 5,
     "players": [
       {
@@ -2057,7 +2057,9 @@
         "teamB": [
           "player_mvdgx3gczbmbzm",
           "player_mvdgwyjum4s2ut"
-        ]
+        ],
+        "scoreA": null,
+        "scoreB": null
       }
     ],
     "payments": [
@@ -2151,6 +2153,246 @@
     "paymentLocked": false,
     "mergeGuests": true,
     "createdAt": "2026-10-18T06:49:43.789Z",
-    "updatedAt": "2026-10-18T07:01:35.694Z"
+    "updatedAt": "2026-10-18T07:12:40.527Z"
+  },
+  {
+    "id": "session_2026_10_18_2",
+    "date": "2026-10-18",
+    "dayOfWeek": "Chủ nhật",
+    "time": "08:00-10:00",
+    "courtCount": 1,
+    "courtCost": 120000,
+    "shuttleCost": 160000,
+    "shuttleBoxPrice": 320000,
+    "shuttleCount": 6,
+    "players": [
+      {
+        "id": "player_mvdhq3zvbuntjm",
+        "memberId": "member_012",
+        "name": "Hạnh",
+        "gender": "male",
+        "level": "TBY",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdhq6xvg4wr5n",
+        "memberId": "member_013",
+        "name": "Hảo",
+        "gender": "male",
+        "level": "Y",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdhq8phnikbb9",
+        "memberId": "member_007",
+        "name": "Phi",
+        "gender": "male",
+        "level": "TBY",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdhqam5tog1y1",
+        "memberId": "member_001",
+        "name": "Quang",
+        "gender": "male",
+        "level": "TBK",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdhqer2fk9d32",
+        "memberId": "member_009",
+        "name": "Ngọc",
+        "gender": "female",
+        "level": "Y",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_mvdhqguewd1uq0",
+        "memberId": "member_008",
+        "name": "Luân",
+        "gender": "male",
+        "level": "Y",
+        "playerType": "default",
+        "resting": false
+      },
+      {
+        "id": "player_guest_mvdhqqhfnjtdz6",
+        "memberId": null,
+        "name": "Bạn của Ngọc",
+        "gender": "male",
+        "level": "TB+",
+        "playerType": "walk_in",
+        "resting": false
+      },
+      {
+        "id": "player_guest_mvdhqyt1f9h31q",
+        "memberId": null,
+        "name": "Bạn của Phi 1",
+        "gender": "male",
+        "level": "TBY",
+        "playerType": "walk_in",
+        "resting": false
+      },
+      {
+        "id": "player_guest_mvdhr6x59rkdlg",
+        "memberId": null,
+        "name": "Bạn của Phi 2",
+        "gender": "female",
+        "level": "Y",
+        "playerType": "walk_in",
+        "resting": false
+      }
+    ],
+    "pairings": [
+      {
+        "id": "r1_match_1",
+        "round": 1,
+        "matchNumber": 1,
+        "court": 1,
+        "teamA": [
+          "player_mvdhqam5tog1y1",
+          "player_mvdhq8phnikbb9"
+        ],
+        "teamB": [
+          "player_guest_mvdhqqhfnjtdz6",
+          "player_guest_mvdhqyt1f9h31q"
+        ]
+      },
+      {
+        "id": "r1_match_2",
+        "round": 1,
+        "matchNumber": 2,
+        "court": 1,
+        "teamA": [
+          "player_mvdhq6xvg4wr5n",
+          "player_mvdhqer2fk9d32"
+        ],
+        "teamB": [
+          "player_mvdhqguewd1uq0",
+          "player_guest_mvdhr6x59rkdlg"
+        ]
+      }
+    ],
+    "payments": [
+      {
+        "playerId": "player_mvdhq3zvbuntjm",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdhq6xvg4wr5n",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdhq8phnikbb9",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdhqam5tog1y1",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdhqer2fk9d32",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_mvdhqguewd1uq0",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": null,
+        "note": ""
+      },
+      {
+        "playerId": "player_guest_mvdhqqhfnjtdz6",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": "player_mvdhqer2fk9d32",
+        "note": ""
+      },
+      {
+        "playerId": "player_guest_mvdhqyt1f9h31q",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": "player_mvdhq8phnikbb9",
+        "note": ""
+      },
+      {
+        "playerId": "player_guest_mvdhr6x59rkdlg",
+        "playFraction": 1,
+        "payCourt": true,
+        "payShuttle": true,
+        "shuttleDiscount": 0,
+        "advancePayment": 0,
+        "shuttleContribution": 0,
+        "paidAmount": 0,
+        "referrerPlayerId": "player_mvdhq8phnikbb9",
+        "note": ""
+      }
+    ],
+    "notes": "",
+    "pairingLocked": false,
+    "paymentLocked": false,
+    "mergeGuests": true,
+    "createdAt": "2026-10-18T07:14:05.791Z",
+    "updatedAt": "2026-10-18T07:16:23.723Z"
   }
 ]
