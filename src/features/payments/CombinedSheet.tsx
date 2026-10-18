@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { CopyButton } from '../../components/CopyButton';
 import { Badge, Button, Card, cx, EmptyState, percentOf, ProgressBar } from '../../components/ui';
 import { useAppData } from '../../hooks/useAppData';
-import { calculateCombinedPayments, generateZaloCombinedText, type CombinedRow } from '../../services/ledgerService';
+import { calculateCombinedPayments, generateCombinedSheetTSV, type CombinedRow } from '../../services/ledgerService';
 import { sortSessionsByDate } from '../../services/sessionService';
 import type { Session } from '../../types';
 import { addDays, formatDate, formatVND, getDayShort, parseISODate } from '../../utils/format';
@@ -76,7 +76,7 @@ export function CombinedSheet() {
           title={`Bảng thu gộp – ${columns.map((column) => column.label).join(' + ')}`}
           actions={
             <div className="flex flex-wrap gap-2 print:hidden">
-              <CopyButton variant="primary" label="Copy gửi Zalo" successMessage="Đã copy nội dung gửi Zalo." getText={() => generateZaloCombinedText(chosen, settings)} />
+              <CopyButton variant="primary" label="Copy vào Excel" successMessage="Đã copy bảng thu, dán vào Excel bằng Ctrl+V." getText={() => generateCombinedSheetTSV(chosen, settings)} />
               <Button size="sm" icon={<Printer size={14} aria-hidden="true" />} onClick={() => window.print()}>
                 In
               </Button>

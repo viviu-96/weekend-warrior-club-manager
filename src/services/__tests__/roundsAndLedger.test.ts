@@ -4,7 +4,7 @@ import { generateZaloPairingText } from '../exportService';
 import {
   calculateCombinedPayments,
   calculateMemberDebts,
-  generateZaloCombinedText,
+  generateCombinedSheetTSV,
   settleCombinedRow,
 } from '../ledgerService';
 import {
@@ -175,10 +175,18 @@ describe('bảng thu gộp nhiều buổi', () => {
     expect(calculateCombinedPayments([...sessions, next], SETTINGS).columns.map((c) => c.label)).toEqual(['T7 26/09', 'CN', 'T7 03/10']);
   });
 
-  it('nội dung Zalo gộp', () => {
-    expect(generateZaloCombinedText(sessions, SETTINGS)).toBe(
-      ['💰 THU TIỀN CẦU LÔNG', '📅 T7 26/09/2026 + CN 27/09/2026', '', 'An: 110.000đ (bao gồm 1 bạn)', 'Bình: 40.000đ (đã đóng ✅)', 'Chi: 40.000đ', '', 'Tổng: 190.000đ'].join('\n'),
-    );
+  it('copy bảng thu gộp vào Excel: mỗi buổi hai cột sân/cầu', () => {
+    const lines = generateCombinedSheetTSV(sessions, SETTINGS).split('\n').map((line) => line.split('\t'));
+    expect(lines[0]).toEqual(['STT', 'Tên', 'Tiền sân T7', 'Tiền cầu T7', 'Tiền sân CN', 'Tiền cầu CN', 'Thành tiền', 'Đã ứng', 'Đã thu', 'Còn thiếu', 'Dư', 'Ghi chú']);
+    expect(lines.map((line) => [line[1], line[6], line[7], line[8], line[9]])).toEqual([
+      ['Tên', 'Thành tiền', 'Đã ứng', 'Đã thu', 'Còn thiếu'],
+      ['An', '120000', '10000', '0', '110000'],
+      ['Bình', '40000', '0', '40000', '0'],
+      ['Chi', '40000', '0', '0', '40000'],
+      ['Tổng (3 người)', '200000', '10000', '40000', '150000'],
+    ]);
+    // Chi chỉ chơi CN nên hai cột T7 để trống.
+    expect(lines[3]!.slice(2, 4)).toEqual(['', '']);
   });
 });
 

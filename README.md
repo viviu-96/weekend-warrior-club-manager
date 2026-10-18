@@ -3,7 +3,7 @@
 Ứng dụng quản lý nội bộ cho câu lạc bộ cầu lông Weekend Warrior. Hai chức năng cốt lõi:
 
 1. **Xếp cặp** đánh đôi cân bằng theo trình độ cho một buổi chơi.
-2. **Tính tiền** sân và cầu cho từng người, kèm nội dung copy gửi Zalo.
+2. **Tính tiền** sân và cầu cho từng người, kèm nút copy bảng thu để dán vào Excel.
 
 Không dùng database. Toàn bộ dữ liệu là 3 file JSON trong thư mục `data/`.
 
@@ -82,7 +82,7 @@ src/
                           calculateSessionPayments, mergeGuestPayment, calculateOutstanding, reconcileSession
     roundingService.ts    roundPayment
     sessionService.ts     createSession, duplicateSession, saveSession, loadSession, thao tác người chơi
-    exportService.ts      exportJSON, exportCSV, generateZaloPaymentText, generateZaloPairingText
+    exportService.ts      exportJSON, exportCSV, generatePaymentSheetTSV, generateZaloPairingText
     validationService.ts  Kiểm tra nghiệp vụ + đọc/chuẩn hoá dữ liệu JSON
     memberService.ts      Tìm kiếm, lọc, autocomplete thành viên
     api.ts                Gọi API
@@ -227,7 +227,9 @@ Từng buổi chơi cũng xuất được ra JSON và CSV (mở bằng Excel) �
 - **Khách & người giới thiệu**: bật "Gộp khách vào người giới thiệu" → tiền của khách cộng vào dòng người
   giới thiệu, ghi chú "Bao gồm N bạn". Tắt → mỗi người một dòng.
 - **Đối soát**: tổng chi, tổng phải thu, đã thu, còn thiếu, chênh lệch và *rounding adjustment* (chỉ hiện
-  trong ứng dụng, không đưa vào nội dung Zalo).
+  trong ứng dụng, không đưa vào bảng copy sang Excel).
+- **Copy vào Excel**: copy bảng thu (một buổi hoặc bảng thu gộp) dạng các cột cách nhau bằng tab; mở Excel
+  hoặc Google Sheets và dán (Ctrl+V) là mỗi giá trị vào đúng một ô. Số tiền để dạng số để Excel cộng được.
 
 ### Nhiều lượt đấu trong một buổi
 
@@ -326,10 +328,10 @@ Sân: 28.000/người. Cầu: 9 người chịu → suất chuẩn 21.000, nửa
 
 ## Kiểm thử
 
-`npm test` chạy 143 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
+`npm test` chạy 148 test cho: điểm 10 trình độ, pair strength, match balance, xếp cặp 4/8/12/16/18 người,
 giới tính, vãng lai, xếp lại, lịch sử partner, chia sân, làm tròn, tiền sân/cầu, tự tính tiền cầu theo số quả, không chơi, nửa buổi,
 ứng trước, đóng góp cầu, gộp 1 và 2 khách, không gộp, còn thiếu, đóng dư, đối soát, nhân bản buổi,
-validation, import lỗi, nội dung Zalo, CSV, JSON, nhiều lượt đấu và xoay vòng người chờ, bảng thu gộp,
+validation, import lỗi, nội dung xếp cặp, copy vào Excel, CSV, JSON, nhiều lượt đấu và xoay vòng người chờ, bảng thu gộp,
 công nợ, thống kê thành viên, luật tính điểm, tỉ số và thắng/thua.
 
 ## Hướng phát triển

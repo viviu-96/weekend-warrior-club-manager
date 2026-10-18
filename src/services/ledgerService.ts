@@ -1,5 +1,6 @@
 import type { PaymentEntry, Session, Settings } from '../types';
-import { formatDate, formatVNDCompact, getDayShort } from '../utils/format';
+import { formatDate, getDayShort } from '../utils/format';
+import { toTSV } from './exportService';
 import { getPlayerKey } from './pairingService';
 import {
   applyPaidToRow,
@@ -175,21 +176,25 @@ export function settleCombinedRow(
   return { updated, skippedLocked };
 }
 
-/** Nội dung Zalo cho bảng thu gộp nhiều buổi. */
-export function generateZaloCombinedText(sessions: Session[], settings: PaymentSettings): string {
-  const { columns, rows } = calculateCombinedPayments(sessions, settings);
-  let total = 0;
-  const lines = rows.map((row) => {
-    const due = Math.max(row.roundedPayable - row.advancePayment, 0);
-    total += due;
-    const extras: string[] = [];
-    const guests = Math.max(...row.cells.map((cell) => cell.row.guestCount));
-    if (guests > 0) extras.push(`bao gồm ${guests} bạn`);
-    if (row.overpaid > 0) extras.push(`dư ${formatVNDCompact(row.overpaid)}`);
-    else if (due > 0 && row.outstanding === 0) extras.push('đã đóng ✅');
-    else if (row.paidAmount > 0) extras.push(`đã đóng ${formatVNDCompact(row.paidAmount)}, còn ${formatVNDCompact(row.outstanding)}`);
-    return `${row.name}: ${formatVNDCompact(due)}${extras.length > 0 ? ` (${extras.join(', ')})` : ''}`;
-  });
-  const dates = columns.map((column) => `${getDayShort(column.date)} ${formatDate(column.date)}`).join(' + ');
-  return ['💰 THU TIỀN CẦU LÔNG', `📅 ${dates}`, '', ...lines, '', `Tổng: ${formatVNDCompact(total)}`].join('\n');
+/** Bảng thu gộp nhiều buổi dạng TSV để dán vào Excel; mỗi buổi hai cột sân/cầu. */
+export function generateCombinedSheetTSV(sessions: Session[], settings: PaymentSettings): string {
+  const { columns, rows, totals } = calculateCombinedPayments(sessions, settings);
+  return toTSV([
+    ['STT', 'Tên', ...columns.flatMap((c) => [`Tiền sân ${c.label}`, `Tiền cầu ${c.label}`]), 'Thành tiền', 'Đã ứng', 'Đã thu', 'Còn thiếu', 'Dư', 'Ghi chú'],
+    ...rows.map((row, index) => [
+      index + 1,
+      row.name,
+      ...columns.flatMap((column): (string | number)[] => {
+        const cell = row.cells.find((item) => item.sessionId === column.sessionId);
+        return cell ? [Math.round(cell.row.courtShare), Math.round(cell.row.shuttleShare)] : ['', ''];
+      }),
+      row.roundedPayable,
+      row.advancePayment,
+      row.paidAmount,
+      row.outstanding,
+      row.overpaid,
+      row.notes.join(' • '),
+    ]),
+    ['', `Tổng (${rows.length} người)`, ...columns.flatMap(() => ['', '']), totals.roundedPayable, totals.advancePayment, totals.paidAmount, totals.outstanding, totals.overpaid, ''],
+  ]);
 }
